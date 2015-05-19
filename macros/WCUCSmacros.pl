@@ -4,8 +4,6 @@
 ##
 ##
 
-use Inline (safemode =>1);
-
 my ($BCODE,
     $ECODE,
     $I,
@@ -58,58 +56,28 @@ sub python_cmp {
 	$student->{original_student_ans} = (defined $student->{original_student_ans})? $student->{original_student_ans} :'';
 	
 	$preamble = <<EOS;
-import sys
-import errno
-import os
-import signal
-from RestrictedPython import compile_restricted
-from RestrictedPython.PrintCollector import PrintCollector
-from cStringIO import StringIO
-
-_print_ = PrintCollector
-class TimeoutError(Exception):
-    pass
-
-class timeout:
-    def __init__(self, seconds=1, error_message='Timeout'):
-        self.seconds = seconds
-        self.error_message = error_message
-    def handle_timeout(self, signum, frame):
-        raise TimeoutError(self.error_message)
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.handle_timeout)
-        signal.alarm(self.seconds)
-    def __exit__(self, type, value, traceback):
-        signal.alarm(0)
-
-sys.stdout = capturer = StringIO()
-sys.stderr = errcapturer = StringIO()
-
-def get_printed():
-    return capturer.getvalue()
-
-def get_errors():
-    return errcapturer.getvalue()
-
+import codejail.jail_code
+codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
 EOS
 
         Inline::Python::py_eval($preamble);
 
 	$answer_code = $student->{original_student_ans};
-	$answer_code =~ s/\\/\\\\/g;
 
-        eval {
-	    Inline::Python::py_eval($answer_code);
-        };
+        # jail_code(command, code=None, files=None, extra_files=None, 
+        #           argv=None, stdin=None)
 
-	warn $@ if $@;
+	eval {
+	    $output = Inline::Python::py_call_function('codejail.jail_code','jail_code','python',$answer_code);
+	};
+	
+	WARN_MESSAGE($@) if $@;
 
-    
-	$output = Inline::Python::py_call_function('__main__','get_printed');
-	$errors = Inline::Python::py_call_function('__main__','get_errors');
+	$stdout = $output->{stdout};
+	$stderr = $output->{stderr};
 
-	$output =~ s/\n/<br>/g;
-	$errors =~ s/^.*\n//;
+	$stdout =~ s/\n/<br>/g;
+	$stderr =~ s/^.*File "jailed_code"[\S ]*\n//s;
 
 	my $ans_hash = new AnswerHash(
 	    'score'=>"0",
@@ -117,9 +85,9 @@ EOS
 	    'student_ans'=>'', #supresses output to original answer field
 	    'original_student_ans' => $answer_value,
 	    'type' => 'essay',
-	    'ans_message'=> $errors,
+	    'ans_message'=> $stderr,
 	    'preview_text_string'=> '',
-	    'preview_latex_string'=> $output,
+	    'preview_latex_string'=> $stdout,
 	    );
 
 	return $ans_hash;
