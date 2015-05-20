@@ -68,7 +68,7 @@ EOS
         #           argv=None, stdin=None)
 
 	eval {
-	    $output = Inline::Python::py_call_function('codejail.jail_code','jail_code','python',$answer_code);
+	    $output = Inline::Python::py_call_function('codejail.jail_code','jail_code','python',$answer_code,[],[['test','hithere']]);
 	};
 	
 	WARN_MESSAGE($@) if $@;
