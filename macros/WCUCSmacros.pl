@@ -47,7 +47,7 @@ $II = IINDENT();
 $III = IIINDENT();
 $IIII = IIIINDENT();
 
-sub BPCODE { MODES(TeX => '\begin{verbatim} ',  Latex2HTML => '\begin{verbatim} ', HTML => '<CODE class="prettyprint">'); };
+sub BPCODE { MODES(TeX => '\begin{verbatim} ',  Latex2HTML => '\begin{verbatim} ', HTML => '<CODE class="prettyprint lang-python">'); };
 sub EPCODE { MODES( TeX => '\end{verbatim}', Latex2HTML =>  '\end{verbatim}',HTML =>  '</CODE>'); };
 sub BCODE { MODES(TeX => '\begin{verbatim} ',  Latex2HTML => '\begin{verbatim} ', HTML => '<CODE>'); };
 sub ECODE { MODES( TeX => '\end{verbatim}', Latex2HTML =>  '\end{verbatim}',HTML =>  '</CODE>'); };
