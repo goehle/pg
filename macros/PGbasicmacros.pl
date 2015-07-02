@@ -45,6 +45,7 @@ my $displayMode;
 
 my ($PAR,
 	$BR,
+	$BRBR,
 	$LQ,
 	$RQ,
 	$BM,
@@ -109,6 +110,7 @@ main::PG_restricted_eval( <<'EndOfFile');
 
 	$main::PAR				= PAR();
 	$main::BR				= BR();
+	$main::BRBR				= BRBR();
 	$main::LQ				= LQ();
 	$main::RQ				= RQ();
 	$main::BM				= BM();
@@ -158,6 +160,7 @@ EndOfFile
 
    	$PAR				 = PAR();
 	$BR				     = BR();
+	$BRBR				 = BRBR();
 	$LQ				     = LQ();
 	$RQ				     = RQ();
 	$BM				     = BM();
@@ -965,8 +968,9 @@ sub NAMED_POP_UP_LIST {
 		my @list1 = @{$list[0]};
 		@list = map { $_ => $_ } @list1;
 	}
-	
-		my $answer_value = '';
+	my $moodle_prefix = ($envir{use_opaque_prefix}) ? "%%IDPREFIX%%":'';
+
+	my $answer_value = '';
 	$answer_value = ${$inputs_ref}{$name} if defined(${$inputs_ref}{$name});
 	my $out = "";
 	if ($displayMode eq 'HTML_MathJax'
@@ -977,7 +981,7 @@ sub NAMED_POP_UP_LIST {
 	 || $displayMode eq 'HTML_asciimath' 
 	 || $displayMode eq 'HTML_LaTeXMathML'
 	 || $displayMode eq 'HTML_img') {
-		$out = qq!<SELECT class="pg-select" NAME = "$name" id="$name" SIZE=1> \n!;
+		$out = qq!<SELECT class="pg-select" NAME = "$moodle_prefix$name" id="$moodle_prefix$name" SIZE=1> \n!;
 		my $i;
 		foreach ($i=0; $i< @list; $i=$i+2) {
 			my $select_flag = ($list[$i] eq $answer_value) ? "SELECTED" : "";
@@ -1434,6 +1438,7 @@ sub MODES {
 	@ALPHABET   		ALPHABET()			capital letter alphabet -- ALPHABET[0] = 'A'
 	$PAR				PAR()				paragraph character (\par or <p>)
 	$BR         		BR()				line break character
+	$BRBR         		BRBR()				line break character
 	$LQ					LQ()				left double quote
 	$RQ					RQ()				right double quote
 	$BM					BM()				begin math
@@ -1494,6 +1499,7 @@ sub PAR { MODES( TeX => '\\par ', Latex2HTML => '\\begin{rawhtml}<P>\\end{rawhtm
 # Alternate definition of BR which is slightly more flexible and gives more white space in printed output
 # which looks better but kills more trees.
 sub BR { MODES( TeX => '\\leavevmode\\\\\\relax ', Latex2HTML => '\\begin{rawhtml}<BR>\\end{rawhtml}', HTML => '<BR/>'); };
+sub BRBR { MODES( TeX => '\\leavevmode\\\\\\relax \\leavevmode\\\\\\relax ', Latex2HTML => '\\begin{rawhtml}<BR><BR>\\end{rawhtml}', HTML => '<P>'); };
 sub LQ { MODES( TeX => "\\lq\\lq{}", Latex2HTML =>   '"',  HTML =>  '&quot;' ); };
 sub RQ { MODES( TeX => "\\rq\\rq{}", Latex2HTML =>   '"',   HTML =>  '&quot;' ); };
 sub BM { MODES(TeX => '\\(', Latex2HTML => '\\(', HTML =>  ''); };  # begin math mode
@@ -2161,13 +2167,14 @@ sub beginproblem {
 			(defined($effectivePermissionLevel) && defined($PRINT_FILE_NAMES_PERMISSION_LEVEL) && $effectivePermissionLevel >= $PRINT_FILE_NAMES_PERMISSION_LEVEL)
 			 || ( defined($inlist{ $studentLogin }) and ( $inlist{ $studentLogin }>0 )  ) ;
 
+	$out .= MODES( TeX => '', HTML => '<P style="margin: 0">');
 	if ( $print_path_name_flag ) {
-		$out = &M3("{\\bf ${probNum}. {\\footnotesize ($problemValue $points) \\path|$fileName|}}\\newline ",
+		$out .= &M3("{\\bf ${probNum}. {\\footnotesize ($problemValue $points) \\path|$fileName|}}\\newline ",
 		" \\begin{rawhtml} ($problemValue $points) <B>$l2hFileName</B><BR>\\end{rawhtml}",
 		 "($problemValue $points) <B>$fileName</B><BR>"
 	 	   ) if ($problemValue >=0 );
 	} else {
-		$out = &M3("{\\bf ${probNum}.} ($problemValue $points) ",
+		$out .= &M3("{\\bf ${probNum}.} ($problemValue $points) ",
 		"($problemValue $points) ",
 		 "($problemValue $points) "
 	 	   ) if ($problemValue  >= 0);
@@ -2655,7 +2662,7 @@ sub image {
 
  	my @output_list = ();
   	while(@image_list) {
- 		my $imageURL = alias(shift @image_list);
+ 		my $imageURL = alias(shift @image_list)//'';
  		$imageURL = ($envir{use_site_prefix})? $envir{use_site_prefix}.$imageURL : $imageURL;
  		my $out="";
 
