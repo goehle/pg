@@ -56,6 +56,35 @@ sub IINDENT { MODES(TeX => '',  Latex2HTML => '    ', HTML => '&nbsp;&nbsp;&nbsp
 sub IIINDENT { MODES(TeX => '',  Latex2HTML => '    ', HTML => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'); };
 sub IIIINDENT { MODES(TeX => '',  Latex2HTML => '    ', HTML => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'); };
 
+sub python_eval {
+
+    $code = shift;
+
+    $preamble = <<EOS;
+import codejail.jail_code
+codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
+EOS
+
+    Inline::Python::py_eval($preamble);
+    
+    eval {
+	$output = Inline::Python::py_call_function('codejail.jail_code','jail_code','python',$code);
+    };
+    
+    WARN_MESSAGE($@) if $@;
+    
+    WARN_MESSAGE($output->{stderr}) if defined($output->{stderr});
+    
+    $stdout = $output->{stdout};
+    $stderr = $output->{stderr};
+    
+    $stdout =~ s/\n/<br>/g;
+    $stderr =~ s/^.*File "jailed_code"[\S ]*\n//s;
+    
+    return $stdout;
+    
+}
+
 sub python_cmp {
 
     my $self = shift;
@@ -187,8 +216,21 @@ sub exact_str_cmp {
     return $answer_evaluator;
 }
 
-sub encode_filter {
+sub format_string {
+    my $string = shift;
+    
+    $string =~ s/\\n/\n/g;
 
+    if ($main::displayMode eq 'TeX' || 
+	$main::displayMode eq 'Latex2HTML') {
+	$string =~ s/\n/\newline/g;
+    } elsif ($main::displayMode =~ /^HTML/){
+	$string =~ s/\n/<br>/g;
+	$string =~ s/&#10;/<br>/g;
+	$string =~ s/ /&nbsp;/;
+    }
+
+    return $string;
 }
 
 sub random_word {
