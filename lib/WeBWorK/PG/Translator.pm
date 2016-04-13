@@ -199,13 +199,9 @@ sub new {
 	&surePathToTmpFile
 	&fileFromPath
 	&directoryFromPath
-	&createFile
-
 	&includePGtext
-
 	&PG_answer_eval
 	&PG_restricted_eval
-
 	&send_mail_to
 	&PGsort
 
@@ -232,7 +228,6 @@ The macros shared with the safe compartment are
 	'&surePathToTmpFile'
 	'&fileFromPath'
 	'&directoryFromPath'
-	'&createFile'
 	'&PG_answer_eval'
 	'&PG_restricted_eval'
 	'&be_strict'
@@ -1255,6 +1250,20 @@ sub process_answers{
 }
 
 
+sub stringify_answers {
+  my $self = shift;
+  no strict;
+  local $rh_answers = $self->{rh_evaluated_answers};
+  $self->{safe}->share('$rh_answers');
+  $self->{safe}->reval(<<'  END_EVAL;');
+    (sub {
+      foreach my $label (keys %$rh_answers) {
+        $rh_answers->{$label}->stringify_hash if ref($rh_answers->{$label}) =~ m/AnswerHash/;
+      }
+    })->();
+  END_EVAL;
+  die $@ if $@;
+}
 
 =head3 grade_problem
 
@@ -1284,6 +1293,7 @@ sub grade_problem {
 		$self->{safe}->reval('&{$rf_grader}($rh_answers,$rh_state,%rf_options)');
 	use strict;
 	die $@ if $@;
+	$self->stringify_answers;
 	($self->{rh_problem_result}, $self->{rh_problem_state});
 }
 

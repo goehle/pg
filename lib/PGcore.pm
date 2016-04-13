@@ -23,6 +23,7 @@ use PGresponsegroup;
 use PGrandom;
 use PGalias;
 use PGloadfiles;
+use AnswerHash;
 use WeBWorK::PG::IO(); # don't important any command directly
 use Tie::IxHash;
 use MIME::Base64();
@@ -331,6 +332,20 @@ sub LABELED_ANS{
   	$self->warning_message("<BR><B>Error in LABELED_ANS:|$label|</B>
   	      -- inputs must be references to AnswerEvaluator objects or subroutines<BR>")
 			unless ref($ans_eval) =~ /CODE/ or ref($ans_eval) =~ /AnswerEvaluator/  ;
+	if (ref($ans_eval) =~ /CODE/) {
+	  #
+	  #  Create an AnswerEvaluator that calls the given CODE reference and use that for $ans_eval.
+	  #  So we always have an AnswerEvaluator from here on.
+	  #
+	  my $cmp = new AnswerEvaluator;
+	  $cmp->install_evaluator(sub {
+	    my $ans = shift; my $checker = shift;
+	    my @args = ($ans->{student_ans});
+	    push(@args,ans_label=>$ans->{ans_label}) if defined($ans->{ans_label});
+	    $checker->(@args); # Call the original checker with the arguments that PG::Translator would have used
+	  },$ans_eval);
+	  $ans_eval = $cmp;
+	}
 	if (defined($self->{PG_ANSWERS_HASH}->{$label})  ){
 		$self->{PG_ANSWERS_HASH}->{$label}->insert(ans_label => $label, ans_eval => $ans_eval, active=>$self->{PG_ACTIVE});
 	} else {
@@ -677,16 +692,15 @@ sub insertGraph {
 	my $extension = ($WWPlot::use_png) ? '.png' : '.gif';
 	my $fileName = $graph->imageName  . $extension;
 	my $filePath = $self->convertPath("gif/$fileName");
-	my $templateDirectory = $self->{envir}->{templateDirectory};
+	my $templateDirectory = $self->{envir}{templateDirectory};
 	$filePath = $self->surePathToTmpFile( $filePath );
 	my $refreshCachedImages = $self->PG_restricted_eval(q!$refreshCachedImages!);
 	# Check to see if we already have this graph, or if we have to make it
 	if( not -e $filePath # does it exist?
-	  or ((stat "$templateDirectory"."$main::envir{probFileName}")[9] > (stat $filePath)[9]) # source has changed
-	  or $graph->imageName =~ /Undefined_Set/ # problems from SetMaker and its ilk should always be redone
+	  or ((stat "$templateDirectory".$self->{envir}{probFileName})[9] > (stat $filePath)[9]) # source has changed
+	  or $self->{envir}{setNumber} =~ /Undefined_Set/ # problems from SetMaker and its ilk should always be redone
 	  or $refreshCachedImages
 	) {
- 		#createFile($filePath, $main::tmp_file_permission, $main::numericalGroupID);
 		local(*OUTPUT);  # create local file handle so it won't overwrite other open files.
  		open(OUTPUT, ">$filePath")||warn ("$0","Can't open $filePath<BR>","");
  		chmod( 0777, $filePath);
@@ -700,12 +714,10 @@ sub insertGraph {
 
 		includePGtext
 		read_whole_problem_file
-		read_whole_file
 		convertPath
 		getDirDelim
 		fileFromPath
 		directoryFromPath
-		createFile
 		createDirectory
 
 =cut
@@ -720,10 +732,6 @@ sub includePGtext {
 sub read_whole_problem_file { 
 	my $self = shift;
 	WeBWorK::PG::IO::read_whole_problem_file(@_); 
- };
-sub read_whole_file { 
-	my $self = shift;
-	WeBWorK::PG::IO::read_whole_file(@_); 
  };
 sub convertPath { 
 	my $self = shift;
@@ -740,10 +748,6 @@ sub fileFromPath {
 sub directoryFromPath { 
 	my $self = shift;
 	WeBWorK::PG::IO::directoryFromPath(@_); 
- };
-sub createFile { 
-	my $self = shift;
-	WeBWorK::PG::IO::createFile(@_); 
  };
 sub createDirectory { 
 	my $self = shift;

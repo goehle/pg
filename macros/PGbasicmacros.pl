@@ -64,6 +64,9 @@ my ($PAR,
 	$COMMENT,
 	$US,
 	$SPACE,
+        $NBSP,
+        $NDASH,
+        $MDASH,
 	$BLABEL,
 	$ELABEL,
 	$BBOLD,
@@ -128,6 +131,9 @@ main::PG_restricted_eval( <<'EndOfFile');
 	$main::HINT				= HINT_HEADING();
 	$main::US				= US();
 	$main::SPACE			= SPACE();
+	$main::NBSP			= NBSP();
+	$main::NDASH			= NDASH();
+	$main::MDASH			= MDASH();
 	$main::BLABEL			= BLABEL();
 	$main::ELABEL			= ELABEL();
 	$main::BBOLD			= BBOLD();
@@ -178,6 +184,9 @@ EndOfFile
 	$HINT				 = HINT_HEADING();
 	$US				     = US();
 	$SPACE			     = SPACE();
+	$NBSP			     = NBSP();
+	$NDASH			     = NDASH();
+	$MDASH			     = MDASH();
 	$BLABEL			     = BLABEL();
 	$ELABEL			     = ELABEL();
 	$BBOLD			     = BBOLD();
@@ -1211,7 +1220,7 @@ sub solution {
 	PG_restricted_eval(q!$main::solutionExists = 1!);  # set solution exists variable.--don't need PGeval??
    
     if ($printSolutionForInstructor) {  # always print solutions for instructor types 
-		$out = join(' ', $BITALIC, "(Instructor solution preview: show the student solution after due date. )$BR",$EITALIC, @in);
+		$out = join(' ', $BITALIC, "(", maketext("Instructor solution preview: show the student solution after due date.")," )$BR",$EITALIC, @in);
 	} elsif ( $displaySolution ) 	{
 		$out = join(' ',@in);  # display solution
 	}    
@@ -1456,6 +1465,9 @@ sub MODES {
 	$HINT				HINT_HEADING()		hint headline
 	$US					US()				underscore character
 	$SPACE				SPACE()				space character (tex and latex only)
+	$NBSP				NBSP()				non breaking space character
+	$NDASH				NDASH()				en dash character
+	$MDASH				MDASH()				em dash character
 	$BLABEL				BLABEL()			begin label (for input)
 	$ELABEL				ELABEL()			end label (for input)
 	$BBOLD				BBOLD()				begin bold typeface
@@ -1516,13 +1528,16 @@ sub END_ONE_COLUMN { MODES(TeX =>
                             Latex2HTML => ' ', HTML => ' ');
 
 };
-sub SOLUTION_HEADING { MODES( TeX => '\\par {\\bf Solution: }',
-                 Latex2HTML => '\\par {\\bf Solution: }',
-          		 HTML =>  '<B>Solution:</B> ');
+sub SOLUTION_HEADING { MODES( TeX => '\\par {\\bf '.maketext('Solution:').' }',
+                 Latex2HTML => '\\par {\\bf '.maketext('Solution:').' }',
+          		 HTML =>  '<B>'.maketext('Solution:').'</B> ');
 };
 sub HINT_HEADING { MODES( TeX => "\\par {\\bf Hint: }", Latex2HTML => "\\par {\\bf Hint: }", HTML => "<B>Hint:</B> "); };
 sub US { MODES(TeX => '\\_', Latex2HTML => '\\_', HTML => '_');};  # underscore, e.g. file${US}name
 sub SPACE { MODES(TeX => '\\ ',  Latex2HTML => '\\ ', HTML => '&nbsp;');};  # force a space in latex, doesn't force extra space in html
+sub NBSP { MODES(TeX => '~',  Latex2HTML => '~', HTML => '&nbsp;');}; 
+sub NDASH { MODES(TeX => '--',  Latex2HTML => '--', HTML => '&ndash;');}; 
+sub MDASH { MODES(TeX => '---',  Latex2HTML => '---', HTML => '&mdash;');};
 sub BBOLD { MODES(TeX => '{\\bf ',  Latex2HTML => '{\\bf ', HTML => '<B>'); };
 sub EBOLD { MODES( TeX => '}', Latex2HTML =>  '}',HTML =>  '</B>'); };
 sub BLABEL { MODES(TeX => '', Latex2HTML => '', HTML => '<LABEL>'); };
