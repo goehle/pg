@@ -1,0 +1,75 @@
+=head1 NAME
+
+PythonInterpreter - An object which will run and print python code.  
+
+=head1 DESCRIPTION
+
+This runs and prints python code.  
+
+=head1 SYNOPSIS
+
+=cut
+
+use strict;
+use AnswerHash;
+use PGcore;
+
+package Python::PythonCode;
+use base qw(Python::PythonInterpreter);
+
+sub new {
+  my $class = shift;
+  my $code = shift // '';
+
+  my $self = $class->SUPER::new($code);
+
+  bless $self, $class;
+
+  $self->evaluate();
+
+  return $self;
+}
+
+sub ans_box {shift; pgCall('ans_box',@_)}
+
+sub cmp {
+  my $self = shift;
+  my $ans = new AnswerEvaluator;
+
+  $ans->ans_hash( 	
+		 correct_ans       => $self->stdout,
+		 type              => 'code',
+		);
+  
+  # remove all pre filters
+  $ans->install_pre_filter('reset');
+  $ans->install_pre_filter('erase') if $self->{ans_name};
+  $ans->install_evaluator(&_answer_evaluator);
+
+  return $ans;
+}
+
+
+sub _answer_evaluator {
+  my $ans_hash = shift;
+  my %response_options = @_;
+  
+  $ans_hash->{original_student_ans} = $ans_hash->{original_student_ans} // '';
+
+  my $studentCode = Python::PythonCode->new($ans_hash->{original_student_ans});
+
+  $studentCode->evaluate();
+  
+  $ans_hash->{score} = $studentCode->stdout eq $ans_hash->correct_ans;
+
+  $ans_hash->{correct_ans} = _convert_to_html($ans_hash->correct_ans);
+  $ans_hash->{original_student_ans} =
+    convert_to_html($ans_hash->original_student_ans);
+  $ans_hash->{student_ans} = '';
+  $ans_hash->{preview_latex_string} = $studentCode->stdout_html();
+  $ans_hash->{ans_message} = $studentCode->stderr_html();
+
+  return $ans_hash;
+}
+
+1;

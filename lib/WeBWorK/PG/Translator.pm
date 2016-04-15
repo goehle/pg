@@ -122,7 +122,9 @@ sub evaluate_modules {
 # 		} else {
 # 			eval(qq! require "${module_name}.pm";  import ${module_name};! );
 # 			warn "Errors in including either the module $module_name.pm or ${courseScriptsDirectory}${module_name}.pm $@" if $@;
-# 		}
+#
+#}
+
 =head2 load_extra_packages
 
 	Usage:  $obj -> load_extra_packages('AlgParserWithImplicitExpand',
@@ -132,6 +134,7 @@ Loads extra packages for modules that contain more than one package.  Works in c
 evaluate_modules.  It is assumed that the file containing the extra packages (along with the base
 pachage name which is the same as the name of the file minus the .pm extension) has already been
 loaded using evaluate_modules
+
 =cut
 
 sub load_extra_packages{

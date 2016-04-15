@@ -315,7 +315,7 @@ sub Verbatim {
 
 sub Answer {
   my $self = shift; my $token = shift;
-  my $def = {options => ["answer","width","name","array"]};
+  my $def = {options => ["answer","width","height","name","array"]};
   $def->{hasStar} = 1 if $token =~ m/\*$/;
   $self->Item("answer",$token,$def);
 }
@@ -481,7 +481,7 @@ my $balanceAll = qr/[\{\[\'\"]/;
 	       balance=>$balanceAll, cancelUnbalanced=>1},
   "'"    => {type=>'balance', terminator=>qr/\'/, terminateMethod=>'terminateBalance'},
   '"'    => {type=>'balance', terminator=>qr/\"/, terminateMethod=>'terminateBalance'},
-  "```"  => {type=>'code', terminator=>qr/```/, terminateMethod=>'terminateCode'},
+  "```"  => {type=>'code', terminator=>qr/```/, terminateMethod=>'terminateCode', parseAll=>1, class=>'pgml_code'},
   ":   " => {type=>'pre', parseAll=>1, terminator=>qr/\n+/, terminateMethod=>'terminatePre',
                combine=>{pre=>"type"}, noIndent=>-1},
   ">>"   => {type=>'align', parseAll=>1, align=>"right", breakInside=>1,
@@ -952,16 +952,32 @@ sub Math {
 sub Answer {
   my $self = shift; my $item = shift;
   my $ans = $item->{answer}; my $rule;
-  $item->{width} = length($item->{token})-2 if (!defined($item->{width}));
+  if (!defined($item->{width})) {
+    $item->{width} = $item->{hasStar} ?
+      80 : length($item->{token})-2;
+  }
   if (defined($ans)) {
     if (ref($ans) =~ /CODE|AnswerEvaluator/) {
-      if (defined($item->{name})) {
-	$rule = main::NAMED_ANS_RULE($item->{name},$item->{width});
-	main::NAMED_ANS($item->{name} => $ans);
-      } else {
-	$rule = main::ans_rule($item->{width});
-	main::ANS($ans);
-      }
+      if ($item->{hasStar}) {
+	if (defined($item->{name})) {
+	  $rule = main::NAMED_ANS_BOX($item->{name},
+				      $item->{height} // 10,
+				      $item->{width});
+	    main::NAMED_ANS($item->{name} => $ans);
+	  } else {
+	    $rule = main::ans_box($item->{height} // 10,
+				  $item->{width});
+	    main::ANS($ans);
+	  }
+	} else { 
+	  if (defined($item->{name})) {
+	    $rule = main::NAMED_ANS_RULE($item->{name},$item->{width});
+	    main::NAMED_ANS($item->{name} => $ans);
+	  } else {
+	    $rule = main::ans_rule($item->{width});
+	    main::ANS($ans);
+	  }
+	}
     } else {
       unless (Value::isValue($ans)) {
         $ans = Parser::Formula($item->{answer});
