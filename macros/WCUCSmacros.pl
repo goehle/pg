@@ -38,11 +38,7 @@ correctly.  This is a one time setup which needs to be done on the server
 
 2. Create a virtualenv
 
-=begin code
-
-sudo virtualenv --python=python3 /wwsandbox
-
-=end code
+   sudo virtualenv --python=python3 /wwsandbox
 
 You don't have to use python3, but all of the WCU CS problems were written
 for python3 and beacause the python code is included in the pg file, 
@@ -50,24 +46,16 @@ they will not be compatible with python2.
 
 3. Add the sandbox user
 
-=begin code
-
-sudo addgroup sandbox
-sudo adduser --disabled-login sandbox --ingroup sandbox
-
-=end code
+   sudo addgroup sandbox
+   sudo adduser --disabled-login sandbox --ingroup sandbox
 
 4.  Let the web server run the sandboxed Python as sandbox.  Create the file
 C</etc/sudoers.d/01-sandbox> and add the following (using C<visudo>) 
 where C<SANDBOX_CALLER> is the apache web user (e.g. apache or www-data)
 
-=begin code
-
-<SANDBOX_CALLER> ALL=(sandbox) SETENV:NOPASSWD:/wwsandbox/bin/python
-<SANDBOX_CALLER> ALL=(sandbox) SETENV:NOPASSWD:/usr/bin/find
-<SANDBOX_CALLER> ALL=(ALL) NOPASSWD:/usr/bin/pkill
-
-=end code
+   <SANDBOX_CALLER> ALL=(sandbox) SETENV:NOPASSWD:/wwsandbox/bin/python
+   <SANDBOX_CALLER> ALL=(sandbox) SETENV:NOPASSWD:/usr/bin/find
+   <SANDBOX_CALLER> ALL=(ALL) NOPASSWD:/usr/bin/pkill
 
 5.  Edit an AppArmor profile. This is a text file specifying the limits on 
 the sandboxed Python executable. Create the file 
@@ -75,38 +63,32 @@ C</etc/apparmor.d/wwsandbox.bin.python> and add the following. Note: If you
 are not using python3 then you should change python3 to whatever non-symlink
 command is eventually being run.  
 
-=begin code
-
-#include <tunables/global>
-
-/wwsandbox/bin/python3 {
-    #include <abstractions/base>
-    #include <abstractions/python>
-
-    /wwsandbox/** mr,
-    # If you have code that the sandbox must be able to access, add lines
-    # pointing to those directories:
-    #/the/path/to/your/sandbox-packages/** r,
-
-    /tmp/codejail-*/ wrix,
-    /tmp/codejail-*/** wrix,
-}
-
-=end code
+   #include <tunables/global>
+   
+   /wwsandbox/bin/python3 {
+       #include <abstractions/base>
+       #include <abstractions/python>
+   
+       /wwsandbox/** mr,
+       # If you have code that the sandbox must be able to access, add lines
+       # pointing to those directories:
+       #/the/path/to/your/sandbox-packages/** r,
+   
+       /tmp/codejail-*/ wrix,
+       /tmp/codejail-*/** wrix,
+   }
 
 Then parse the profiles to activate them 
 
-=begin code
-
-sudo apparmor_parser /etc/apparmor.d/wwsandbox.bin.python
-
-=end code
+   sudo apparmor_parser /etc/apparmor.d/wwsandbox.bin.python
 
 =head2 USAGE
 
 You create a code object using either C<PythonOutput()> or C<PythonCode()>.  
 The first argument to the function should be the code.  The following 
 arguments can be provided as well: 
+
+=over
 
 =item files
 
@@ -135,6 +117,13 @@ This can be used to get the options listed above and also to set them.
 
 This can be used to get the code or to set it.  
 
+=item tests
+
+This is for C<PythonCode> only.  If you specify a list of hash references
+each containing one more more "argv", "files" or "stdin" keys, the output
+of the original code and the student code will be compared for each set of
+inputs in the tests list
+
 =item evaluate
 
 This runs the jailed code.  It returns the status of the jailed code.  The
@@ -155,19 +144,22 @@ This returns the stderr output of evaluated code.
 =item cmp
 
 This returns a comparator for the object.  For C<PythonOutput> the students
-answer is compared to the stdout of the code.  For C<PythonCode> the students
-answer is run as python code and the two outputs are compared for equality.  
+answer is compared to the stdout of the code.  If there is a runtime error 
+then the correct answer is the class of the error (i.e SyntaxError). 
+
+For C<PythonCode> the students answer is run as python code and the two 
+outputs are compared for equality.
+
+=back
 
 =head2 EXAMPLES
 
 The following problem prints out some basic python code and asks students
 to provide the otput of the python code.  The output is checked exactly, 
 including the number of spaces. 
-
-=begin code
- 
+    
  DOCUMENT();      
- loadMacros(
+     loadMacros(
     "PGstandard.pl", 
     "PGML.pl",
     "WCUCSmacros.pl",
@@ -191,22 +183,17 @@ including the number of spaces.
  Output:   
  :   [@ $code->stdout() @]
  END_PGML_SOLUTION
-  
  ENDDOCUMENT();
-
-=end code
-
+    
 Note that we are using PGML to generate the problem text.  PGML is a good 
 choice for these types of problems because it is easy to write code 
 blocks using C<```code```> and its easy to make preformatted text by writing
-C<:  preformated>.  When making answer blanks do either C<[_____]{$code->cmp}>
-for answer rules or C<[_____]*{$code->cmp}> for answer boxes.  
+C<:  preformated>.  When making answer blanks do either C<[_____]>
+for answer rules or C<[_____]*> for answer boxes.  
 
 This example asks students to provide the output of a snippet of Python code. 
 The code is provided with stdinput as well as arguements which are part
 of the output.  Notice that the argv list is a reference to an array of strings.
-
-=begin code
  
  DOCUMENT();      
  loadMacros(
@@ -244,13 +231,9 @@ of the output.  Notice that the argv list is a reference to an array of strings.
  END_PGML_SOLUTION
  ENDDOCUMENT();        
 
-=end code
-
 In this example a file with name file is created containing the text Hello 
 World.  The Python code opens the file and reads and prints the content. 
 
-=begin code 
- 
  DOCUMENT();      
  loadMacros(
     "PGstandard.pl", 
@@ -283,13 +266,9 @@ World.  The Python code opens the file and reads and prints the content.
  END_PGML_SOLUTION
  ENDDOCUMENT();    
 
-=end code
-
 In this example students are asked to create code which prints the described
 output.  
 
-=begin code
- 
  DOCUMENT();      
  loadMacros(
     "PGstandard.pl",  
@@ -317,7 +296,40 @@ output.
  END_PGML_SOLUTION
  ENDDOCUMENT();        
 
-=end code
+For this last example we ask students to write a program which will check an 
+argument and either print the std input or a string depending on if the 
+argument is 1 or 0.  This demonstrates how to set up multiple tests when
+checking student code
+
+ DOCUMENT();      
+ loadMacros(
+    "PGstandard.pl",  
+    "PGML.pl",
+    "WCUCSmacros.pl",
+ );
+ TEXT(beginproblem());
+ $showPartialCorrectAnswers = 1;
+ $code = PythonCode(<<EOS);
+ import sys
+ if (int(sys.argv[1]) == 1):
+    print(input())
+ else: 
+    print('hello')
+ EOS
+ $code->tests({argv => ["1"], stdin => 'moop'},
+              {argv => ["1"], stdin => 'spoon'},
+              {argv => ["0"], stdin => 'warp'});
+ BEGIN_PGML
+ Write code which checks the first argument.  If it is equal to 1 then it prints  the contents of stdin
+ and if it is equal to zero then it prints "hello".
+ Answer:  
+ [_______]*{$code->cmp}
+ END_PGML
+ BEGIN_PGML_SOLUTION
+ Code:
+ ```[@ $code->code @]```
+ END_PGML_SOLUTION
+ ENDDOCUMENT();   
 
 =cut
 

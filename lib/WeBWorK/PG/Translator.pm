@@ -1329,7 +1329,7 @@ sub process_answers{
 
 			$new_rh_ans_evaluation_result = $self->{safe} ->reval('$new_rf_fun->evaluate($new_temp_ans, ans_label => \''.$ans_name.'\')');
 			$@ = $errorTable{$@} if $@ && defined($errorTable{$@});  #Are we redefining error messages here?
-			# warn "Error in Translator.pm:: (new) process_answers: Answer $ans_name: |$temp_ans|\n $@\n" if $@;
+			 warn "Error in Translator.pm:: (new) process_answers: Answer $ans_name: |$temp_ans|\n $@\n" if $@;
 			# The following needs more work for the new rh_ans_evaluation
 			if ( ref( $new_rh_ans_evaluation_result) =~ /AnswerHash/i ) {
 				$PG->warning_message( "Evaluation error in new process: Answer $ans_name:<br/>\n",
