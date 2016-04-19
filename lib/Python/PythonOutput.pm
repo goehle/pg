@@ -17,26 +17,26 @@ use PGcore;
 package Python::PythonOutput;
 use base qw(Python::PythonInterpreter);
 
-sub new {
-  my $class = shift;
-  my $pgpath = shift;
-  my $code = shift // '';
-  my $self = $class->SUPER::new($pgpath, $code);
+sub ans_rule {shift; pgCall('ans_rule',@_)}
 
-  bless $self, $class;
+sub error {
+  my $self = shift;
 
-  $self->evaluate();
-
-  return $self;
+  if (@_) {
+    $self->{error} = uc(shift);
+  } else {
+    return $self->{error};
+  }
 }
 
-sub ans_rule {shift; pgCall('ans_rule',@_)}
 
 sub cmp {
   my $self = shift;
   my $ans = new AnswerEvaluator();
 
-  $ans->ans_hash( correct_ans       => $self->stdout,
+  my $correct_ans = $self->error // $self->stdout;
+  
+  $ans->ans_hash( correct_ans       => $correct_ans,
 		  type              => 'string_literal',
 		  score             => 0,
 		);
@@ -50,14 +50,17 @@ sub cmp {
   
      $ans_hash->{_filter_name} = "Evaluator: Compare string answers with eq";
      $ans_hash->{original_student_ans} = $ans_hash->{original_student_ans} // '';
-  
+
      $ans_hash->{original_student_ans} =~ s/\r//g;
      $ans_hash->{correct_ans} =~ s/\r//g;
      
      chomp($ans_hash->{original_student_ans});
      chomp($ans_hash->{correct_ans});
-  
-     $ans_hash->{score} = ($ans_hash->{original_student_ans} eq $ans_hash->{correct_ans})?1:0  ;
+
+
+     
+     $ans_hash->{score} =
+       ($ans_hash->{original_student_ans} eq $ans_hash->{correct_ans}) ? 1:0;
      
      return $ans_hash;
    });

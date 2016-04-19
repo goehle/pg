@@ -360,7 +360,7 @@ sub NAMED_ANS_RULE {
 	}
 	
 #	$answer_value =~ tr/\\$@`//d;   ## unnecessary since we encode HTML now
-	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
+#	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
 	$name = RECORD_ANS_NAME($name, $answer_value);
 	$answer_value = encode_pg_and_html($answer_value);
 	my $previous_name = "previous_$name";
@@ -426,7 +426,7 @@ sub NAMED_HIDDEN_ANS_RULE { # this is used to hold information being passed into
 	}
 
 #	$answer_value =~ tr/\\$@`//d;   #`## make sure student answers can not be interpolated by e.g. EV3
-	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
+#	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
 
 	$name = RECORD_ANS_NAME($name, $answer_value);
 	$answer_value = encode_pg_and_html($answer_value);
@@ -465,7 +465,7 @@ sub NAMED_ANS_RULE_EXTENSION {
 		$answer_value = '' unless defined($answer_value);
 	}
 #	$answer_value =~ tr/\\$@`//d;   #`## make sure student answers can not be interpolated by e.g. EV3
-	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
+#	$answer_value =~ s/\s+/ /g;     ## remove excessive whitespace from student answer
 	INSERT_RESPONSE($name,$name,$answer_value);  #FIXME hack -- this needs more work to decide how to make it work
 	$answer_value = encode_pg_and_html($answer_value);
 

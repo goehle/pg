@@ -17,20 +17,6 @@ use PGcore;
 package Python::PythonCode;
 use base qw(Python::PythonInterpreter);
 
-sub new {
-  my $class = shift;
-  my $pgpath = shift;
-  my $code = shift // '';
-
-  my $self = $class->SUPER::new($pgpath,$code);
-
-  bless $self, $class;
-
-  $self->evaluate();
-
-  return $self;
-}
-
 sub ans_box {shift; pgCall('ans_box',@_)}
 
 sub cmp {

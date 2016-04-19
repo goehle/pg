@@ -1255,7 +1255,8 @@ sub process_answers{
 ##################
         $new_rf_fun = $answergrp->ans_eval;   
         my ($ans, $errors) = $self->filter_answer( $responsegrp->get_response($ans_name) );     
-        $new_temp_ans = $ans; # avoid undefined errors in translator
+		$new_temp_ans = $ans; # avoid undefined errors in translator
+
         my $skip_evaluation=0;
         if (not defined($new_rf_fun) ) {
         	$PG->warning_message( "No answer evaluator for the question labeled: $ans_name ");

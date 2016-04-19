@@ -10,23 +10,13 @@ This runs and prints python code.
 
 =pod
 
-    Run code in a jailed subprocess.
-
-    `command` is an abstract command ("python", "node", ...) that must have
-    been configured using `configure`.
+    Options for the jail_code process are:  
 
     `code` is a string containing the code to run.  If no code is supplied,
     then the code to run must be in one of the `files` copied, and must be
     named in the `argv` list.
 
-    `files` is a list of file paths, they are all copied to the jailed
-    directory.  Note that no check is made here that the files don't contain
-    sensitive information.  The caller must somehow determine whether to allow
-    the code access to the files.  Symlinks will be copied as symlinks.  If the
-    linked-to file is not accessible to the sandbox, the symlink will be
-    unreadable as well.
-
-    `extra_files` is a list of pairs, each pair is a filename and a bytestring
+    `files` is a list of pairs, each pair is a filename and a bytestring
     of contents to write into that file.  These files will be created in the
     temp directory and cleaned up automatically.  No subdirectories are
     supported in the filename.
@@ -35,14 +25,14 @@ This runs and prints python code.
 
     `stdin` is a string, the data to provide as the stdin for the process.
 
-    `slug` is an arbitrary string, a description that's meaningful to the
-    caller, that will be used in log messages.
 
-    Return an object with:
+    Outputs are: 
 
-        .stdout: stdout of the program, a string
-        .stderr: stderr of the program, a string
-        .status: exit status of the process: an int, 0 for success
+    `stdout` stdout of the program, a string
+
+    `stderr` stderr of the program, a string
+
+    `status` exit status of the process: an int, 0 for success
 
 =cut
 
@@ -55,6 +45,7 @@ sub new {
   my $class = shift;
   my $pgpath = shift;
   my $code = shift // '';
+  my %options = @_;
 
   my $self = {code => $code,
 	      pgpath => $pgpath,
@@ -64,6 +55,17 @@ sub new {
 	     };
 
   bless $self, $class;
+
+  return $self;
+}
+
+sub options {
+  my $self = shift;
+  my %options = @_;
+
+  foreach my $key (keys %options) {
+    $self->{$key} = $options{$key};
+  }
 
   return $self;
 }
@@ -89,6 +91,7 @@ sub status {
 }
 
 sub stdout {
+
   my $self = shift;
 
   if (@_) {
@@ -133,6 +136,10 @@ EOS
 					       'jail_code',
 					       'python',
 					       $code,
+					       '',
+					       $self->{files} // '',
+					       $self->{argv} // '',
+					       $self->{stdin} // '',
 					      );
   };
   warn($@) if $@;
@@ -142,31 +149,6 @@ EOS
   $self->stderr(Inline::Python::py_get_attr($output,"stderr"));
   
   return $self->status;
-}
-
-sub stdout_html {
-  my $self = shift;
-  return _convert_to_html($self->stdout);
-}
-
-sub stderr_html {
-  my $self = shift;
-  return _convert_to_html($self->stderr);
-}
-
-sub code_html {
-  my $self = shift;
-  return _convert_to_html($self->code);
-}
-
-
-sub _convert_to_html {
-  shift;
-
-  s/\n/<br>/g;
-  s/^.*File "jailed_code"[\S ]*\n//s;
-   
-  return;
 }
 
 1;

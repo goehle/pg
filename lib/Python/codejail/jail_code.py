@@ -201,7 +201,7 @@ def jail_code(command, code=None, files=None, extra_files=None, argv=None,
         for name, content in extra_files or ():
             with open(os.path.join(homedir, name), "wb") as extra:
                 extra.write(content)
-
+                
         cmd = []
         rm_cmd = []
 
