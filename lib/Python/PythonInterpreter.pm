@@ -92,6 +92,8 @@ sub new {
 
   bless $self, $class;
 
+  $self->options(%options);
+  
   return $self;
 }
 
@@ -113,6 +115,36 @@ sub code {
     $self->{code} = shift;
   } else {
     return $self->{code};
+  }
+}
+
+sub files {
+  my $self = shift;
+
+  if (@_) {
+    $self->{files} = shift;
+  } else {
+    return $self->{files};
+  }
+}
+
+sub argv {
+  my $self = shift;
+
+  if (@_) {
+    $self->{argv} = shift;
+  } else {
+    return $self->{argv};
+  }
+}
+
+sub stdin {
+  my $self = shift;
+
+  if (@_) {
+    $self->{stdin} = shift;
+  } else {
+    return $self->{stdin};
   }
 }
 

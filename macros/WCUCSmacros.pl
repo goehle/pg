@@ -359,6 +359,10 @@ sub PythonCode {
   return new Python::PythonCode($envir{pgDirectories}->{lib}, @_);
 }
 
+sub PythonDriver {
+  return new Python::PythonDriver($envir{pgDirectories}->{lib}, @_);
+}
+
 sub random_word {
     return $word_list[random(0,$#word_list)];
 }
