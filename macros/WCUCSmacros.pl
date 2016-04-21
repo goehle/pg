@@ -27,7 +27,10 @@ There are two main objects, the first takes in Python code and the answer is
 the (stdout) output of the Python code.  The other takes in Python code and
 the answer is student Python code which is correct if it produces the same 
 output as the instructor python code.  There are also some macros for randomly
-generating variable names and strings.  
+generating variable names and strings.  There is also a third object which 
+takes in "driver" code.  The student code will be provided to the driver code
+as a module named "student".  The driver code is responsible for returning a 
+score and printing answer messages.  
 
 =head2 INSTALLATION
 
@@ -84,7 +87,8 @@ Then parse the profiles to activate them
 
 =head2 USAGE
 
-You create a code object using either C<PythonOutput()> or C<PythonCode()>.  
+You create a code object using either C<PythonOutput()> or 
+C<PythonCode()> or C<PythonDriver()>
 The first argument to the function should be the code.  The following 
 arguments can be provided as well: 
 
@@ -149,6 +153,11 @@ then the correct answer is the class of the error (i.e SyntaxError).
 
 For C<PythonCode> the students answer is run as python code and the two 
 outputs are compared for equality.
+
+For C<PythonDriver> the students answer is provided to the code as a module
+named student.  The driver code can import, run and test the student module.
+It is the responsibility of the driver code to print answer messages and a 
+score.  
 
 =back
 
@@ -330,6 +339,51 @@ checking student code
  ```[@ $code->code @]```
  END_PGML_SOLUTION
  ENDDOCUMENT();   
+
+In this example we ask students to write a module with a function add that
+takes in two numbers and adds them.  The driver code checks that the add
+function exists and that it can add two numbers.  
+
+ DOCUMENT();      
+ loadMacros(
+    "PGstandard.pl",  
+    "PGML.pl",
+    "WCUCSmacros.pl",
+ );
+ TEXT(beginproblem());
+ $showPartialCorrectAnswers = 1;
+ $code = PythonDriver(<<EOS);
+ import student
+ if (not hasattr(student,'add')):
+    print("Your method does not have the add function")
+    exit(0)
+ print("Calling \"add\" with {} and {}".format(2,3));
+ a = student.add(2,3)
+ print("Got {} expected {}".format(a,5))
+ if (a == 5):
+    print("Success");
+    exit(1);
+ else: 
+    print("Failed");
+    exit(0);
+ EOS
+ $code->correct_code(<<EOS);
+ def add(x,y):
+    return x+y
+ EOS
+ BEGIN_PGML
+ Write a Python script which has one method "add" which takes in two numbers
+ and returns their sum.  
+ 
+ Code:  
+ [_______]*{$code->cmp}
+ END_PGML
+ 
+ BEGIN_PGML_SOLUTION
+ Solution Code:  
+ ```[@ $code->correct_code @]```
+ END_PGML_SOLUTION
+ ENDDOCUMENT();        
 
 =cut
 
