@@ -149,6 +149,7 @@ sub cmp {
 	}
 
 	$ans_hash->{student_ans} = $ans_hash->{original_student_ans};
+	$ans_hash->{comment} = $studentCode->pylint();
 
 	return $ans_hash;
       },

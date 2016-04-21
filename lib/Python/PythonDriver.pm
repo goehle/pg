@@ -82,6 +82,8 @@ sub cmp {
 	$string =~ s/^.*File "jailed_code"[\S ]*\n//s;
 	$ans_hash->{ans_message} = $string;
 	$ans_hash->{student_ans} = $ans_hash->{original_student_ans};
+
+	$ans_hash->{comment} = $self->pylint($student_code);
 	
 	return $ans_hash;
       },

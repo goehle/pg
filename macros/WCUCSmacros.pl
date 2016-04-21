@@ -393,9 +393,31 @@ sub _WCUCSmacros_init {
     if (!$main::WCUCSHeaderSet) {
 	main::HEADER_TEXT(<<'END_HEADER_TEXT');
 	<script src="/webwork2_files/js/vendor/codeprettify/run_prettify.js" language="javascript"></script>
+        <script src="/webwork2_files/js/vendor/codemirror/codemirror.js" language="javascript"></script>
+        <script src="/webwork2_files/js/vendor/codemirror/python.js" language="javascript"></script>
+        <script src="/webwork2_files/js/vendor/codemirror/trailingspace.js" language="javascript"></script>
+        <script src="/webwork2_files/js/vendor/codemirror/rulers.js" language="javascript"></script>
+        <link rel="stylesheet" type="text/css" href="/webwork2_files/js/vendor/codemirror/codemirror.css"/>
+        <style type="text/css">
+           .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}
+           .cm-trailingspace {
+           background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==);
+           background-position: bottom left;
+           background-repeat: repeat-x;
+           }
+        </style>
         <script type="text/javascript">
         $(function() {
             $('code.pgml').addClass('prettyprint');
+            $('#answerComment table').addClass('table');
+            $('#problem_body textarea').each(function () {
+                 CodeMirror.fromTextArea(this, 
+                 {mode: "python",
+                  indentUnit: 4, 
+                  lineNumbers: true, 
+                  showTrailingSpace: true, 
+                  rulers: [{column: 100, color:'red', lineStyle:"dashed"}],              });
+            });
         });
         </script>
 END_HEADER_TEXT

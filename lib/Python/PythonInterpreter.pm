@@ -93,6 +93,15 @@ sub new {
   bless $self, $class;
 
   $self->options(%options);
+  # initialize codejail python
+  my $preamble = <<EOS;
+import sys
+sys.path.append('$pgpath/Python')
+import codejail.jail_code
+codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
+EOS
+
+  Inline::Python::py_eval($preamble);
   
   return $self;
 }
@@ -185,20 +194,6 @@ sub evaluate {
   my $code = $self->code;
   my $output;
 
-  my $pgpath = $self->{pgpath}."/Python";
-
-  my $preamble = <<EOS;
-import sys
-sys.path.append('$pgpath')
-import codejail.jail_code
-codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
-EOS
-
-  eval {
-    Inline::Python::py_eval($preamble);
-  };
-  warn($@) if $@;
-
   eval {
     $output = Inline::Python::py_call_function('codejail.jail_code',
 					       'jail_code',
@@ -218,5 +213,35 @@ EOS
   
   return $self->status;
 }
+
+sub pylint {
+  my $self = shift;
+  my $code = shift // $self->code;
+
+  my $output;
+  my $pgpath = $self->{pgpath}."/Python";
+
+  eval {
+    $output = Inline::Python::py_call_function('codejail.jail_code',
+					       'jail_code',
+					       'python',
+					       '',
+					       [$self->{pgpath}."/Python/pylint.rc"],
+					       [['student.py',$code]],
+					       ['/wwsandbox/bin/pylint',
+						'--rcfile=./pylint.rc',
+						'student.py'],
+					       '',
+					      );
+  };
+  warn($@) if $@;
+
+  my $messages = Inline::Python::py_get_attr($output,"stdout");
+
+  $messages =~ s/Messages/Style Messages/;
+  
+  return $messages;
+}
+
 
 1;
