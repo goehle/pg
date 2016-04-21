@@ -237,10 +237,34 @@ sub pylint {
   warn($@) if $@;
 
   my $messages = Inline::Python::py_get_attr($output,"stdout");
+  my $comment = '';
 
-  $messages =~ s/Messages/Style Messages/;
+#  warn(Inline::Python::py_get_attr($output,"stderr"));
+  if ($messages) {
+    $messages =~ s/^.*\n//;
+    my @elements = split(/@#/s,$messages);
+    
+    $comment = "<h4>Style Messages</h4>\n";
+    $comment .= "<table class='table' style='font-family: Monaco, monospace'>\n";
+    $comment .= "<tr><th>Category</th><th>Error Type</th><th>Object</th>";
+    $comment .= "<th>Line</th><th>Message</th></tr>\n";
+    
+    for (my $i=0; $i+5 <= $#elements; $i += 6) {
+      $elements[$i+1] = "<a href=\"http://pylint-messages.wikidot.com/messages:$elements[$i+5]\" target='ww_pylint'>$elements[$i+1]</a>";
+      $elements[$i+4] =~ s/ /&nbsp;/g;
+      $elements[$i+4] =~ s/\n/<br\>/g;
+      
+      $comment .= "<tr>";
+      for (my $j=0; $j<5; $j++) {
+	$comment .= "<td>$elements[$i+$j]</td>";
+      }
+      $comment .= "</tr>\n";
+    }
+    
+    $comment .= "</table>\n";
+  }
   
-  return $messages;
+  return $comment;
 }
 
 

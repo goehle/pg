@@ -80,6 +80,7 @@ sub cmp {
 	$ans_hash->{preview_latex_string} = $self->stdout();
 	my $string = $self->stderr;
 	$string =~ s/^.*File "jailed_code"[\S ]*\n//s;
+	$string =~ s/File "\/tmp\/\S+\/student.py"/Answer Code/g;
 	$ans_hash->{ans_message} = $string;
 	$ans_hash->{student_ans} = $ans_hash->{original_student_ans};
 

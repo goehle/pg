@@ -61,6 +61,7 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=reload-builtin,file-builtin,hex-method,unpacking-in-except,long-builtin,indexing-exception,old-division,input-builtin,intern-builtin,backtick,old-octal-literal,xrange-builtin,standarderror-builtin,useless-suppression,no-absolute-import,old-raise-syntax,round-builtin,oct-method,basestring-builtin,filter-builtin-not-iterating,range-builtin-not-iterating,next-method-called,execfile-builtin,coerce-method,apply-builtin,dict-iter-method,nonzero-method,dict-view-method,unichr-builtin,reduce-builtin,raw_input-builtin,parameter-unpacking,getslice-method,buffer-builtin,zip-builtin-not-iterating,map-builtin-not-iterating,coerce-builtin,import-star-module-level,old-ne-operator,delslice-method,suppressed-message,cmp-builtin,metaclass-assignment,print-statement,cmp-method,unicode-builtin,using-cmp-argument,setslice-method,raising-string,long-suffix,report,C0111
+#added C0111
 
 
 [REPORTS]
@@ -68,7 +69,8 @@ disable=reload-builtin,file-builtin,hex-method,unpacking-in-except,long-builtin,
 # Set the output format. Available formats are text, parseable, colorized, msvs
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
-output-format=html
+#changed GG
+output-format=text
 
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be
@@ -76,6 +78,7 @@ output-format=html
 files-output=no
 
 # Tells whether to display a full report or only the messages
+# changed GG
 reports=no
 
 # Python expression which should return a note less than 10 (10 is the highest
@@ -87,7 +90,10 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 
 # Template used to display messages. This is a python new-style format string
 # used to format the message information. See doc for all details
-msg-template="{category}{obj}{line}{column}{msg}"
+# Changed GG
+msg-template="{category}@#{symbol}@#{obj}@#{line}@#{msg}@#{msg_id}@#"
+
+
 
 
 [FORMAT]
