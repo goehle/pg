@@ -37,11 +37,46 @@ Usage examples:
 We now call on the Legacy version, which is used by
 num_cmp to handle numbers with units.
 
+New units can be added at run time by using the newUnit option
+
+       $a = NumberWithUnits("3 apples",{newUnit=>'apples'});
+
+A new unit can either be a string, in which case the string is added as a
+new unit with no relation to other units, or as a hashreference
+
+       $newUnit = {name => 'bear',
+                   conversion => {factor =>3, m=>1}};
+       $a = NumberWithUnits("3 bear", {newUnit=>$newUnit});
+
+You can also define your own conversion hash.  In the above example one bear
+is three meters.  (See Units.pm for examples). 
+
+Finally, the newUnit option can also be an array ref containing any number of
+new units to add.  A common reason for doing this would be to add the plural
+version of the unit as an equilvalent unit.  E.G.
+
+      $newUnits = ['apple',{name=>'apples',conversion=>{factor=>1,apple=>1}}];
+      $a = NumberWithUnits("3 apples",{newUnit=>$newUnits});
+
+In this case both 3 apple and 3 apples would be considered correct.  
+
+Note:  English pluralization is suprisingly hard, so WeBWorK will make no 
+attempt to display a grammerically correct result.  
+
 =cut
 
 loadMacros('MathObjects.pl');
 
 sub _parserNumberWithUnits_init {
+  # We make copies of these hashes here because these copies will be unique to  # the problem.  The hashes in Units are shared between problems.  We pass
+  # the hashes for these local copies to the NumberWithUnits package to use
+  # for all of its stuff.  
+  my %fundamental_units = %Units::fundamental_units;
+  my %known_units = %Units::known_units;
+
+  
+  Parser::Legacy::ObjectWithUnits::initializeUnits(\%fundamental_units,\%known_units);
+  
   main::PG_restricted_eval('sub NumberWithUnits {Parser::Legacy::NumberWithUnits->new(@_)}');
 }
 
