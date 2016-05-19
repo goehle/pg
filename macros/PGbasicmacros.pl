@@ -1223,7 +1223,7 @@ sub solution {
 	PG_restricted_eval(q!$main::solutionExists = 1!);  # set solution exists variable.--don't need PGeval??
    
     if ($printSolutionForInstructor) {  # always print solutions for instructor types 
-		$out = join(' ', $BITALIC, "(", maketext("Instructor solution preview: show the student solution after due date. "),"$BR",$EITALIC, @in);
+		$out = join(' ', $BITALIC, "(", maketext("Instructor solution preview: show the student solution after due date.")," )$BR",$EITALIC, @in);
 	} elsif ( $displaySolution ) 	{
 		$out = join(' ',@in);  # display solution
 	}    
@@ -1525,17 +1525,17 @@ sub LTS { MODES(TeX => '<', Latex2HTML => '\\lt ', HTML => '&lt;', HTML_tth => '
 sub GTS { MODES(TeX => '>', Latex2HTML => '\\gt ', HTML => '&gt;', HTML_tth => '>' ); };
 sub LTE { MODES(TeX => '\\le ', Latex2HTML => '\\le ', HTML => '<U>&lt;</U>', HTML_tth => '\\le ' ); };
 sub GTE { MODES(TeX => '\\ge ', Latex2HTML => '\\ge ', HTML => '<U>&gt;</U>', HTML_tth => '\\ge ' ); };
-sub BEGIN_ONE_COLUMN { MODES(TeX => " \\end{multicols}\n",  Latex2HTML => " ", HTML =>   " "); };
+sub BEGIN_ONE_COLUMN { MODES(TeX => "\\ifdefined\\nocolumns\\else \\end{multicols}\\fi\n",  Latex2HTML => " ", HTML =>   " "); };
 sub END_ONE_COLUMN { MODES(TeX =>
-              " \\begin{multicols}{2}\n\\columnwidth=\\linewidth\n",
+              " \\ifdefined\\nocolumns\\else \\begin{multicols}{2}\n\\columnwidth=\\linewidth \\fi\n",
                             Latex2HTML => ' ', HTML => ' ');
 
 };
-sub SOLUTION_HEADING { MODES( TeX => '\\par {\\bf'.maketext('Solution:').' }',
-                 Latex2HTML => '\\par {\\bf'.maketext('Solution:').' }',
+sub SOLUTION_HEADING { MODES( TeX => '\\par {\\bf '.maketext('Solution:').' }',
+                 Latex2HTML => '\\par {\\bf '.maketext('Solution:').' }',
           		 HTML =>  '<B>'.maketext('Solution:').'</B> ');
 };
-sub HINT_HEADING { MODES( TeX => "\\par {\\bf Hint: }", Latex2HTML => "\\par {\\bf Hint: }", HTML => "<B>Hint:</B> "); };
+sub HINT_HEADING { MODES( TeX => "\\par {\\bf ".maketext('Hint:')." }", Latex2HTML => "\\par {\\bf ".maketext('Hint:')." }", HTML => "<B>".maketext('Hint:')."</B> "); };
 sub US { MODES(TeX => '\\_', Latex2HTML => '\\_', HTML => '_');};  # underscore, e.g. file${US}name
 sub SPACE { MODES(TeX => '\\ ',  Latex2HTML => '\\ ', HTML => '&nbsp;');};  # force a space in latex, doesn't force extra space in html
 sub NBSP { MODES(TeX => '~',  Latex2HTML => '~', HTML => '&nbsp;');}; 
@@ -1681,7 +1681,7 @@ sub addToTeXPreamble {
                 # inside a multicols environment and its scope doesn't reach the whole file
                 # It has to do with the way the multicol single col stuff was set up
                 # when printing hardcopy.  --it's weird and there must be a better way.
-                TEXT("\\end{multicols}\n", $str, "\n","\\begin{multicols}{2}\\columnwidth=\\linewidth\n");
+                TEXT("\\ifdefined\\nocolumns\\else \\end{multicols} \\fi\n", $str, "\n","\\ifdefined\\nocolumns\\else \\begin{multicols}{2}\\columnwidth=\\linewidth \\fi\n");
         } else { # for jsMath and MathJax mode
             my $mathstr = "\\(".$str."\\)";  #add math mode.  
             $mathstr =~ s/\\/\\\\/g;         # protect math modes ($str has a true TeX command, 
@@ -2174,15 +2174,8 @@ sub beginproblem {
     my $l2hFileName = protect_underbar($envir->{probFileName});
 	my %inlist;
 	my $permissionLevel = $envir->{permissionLevel};
- 	if ( $inputs_ref->{showPGInfo} and ($permissionLevel >=10)) {
- 	     if ( defined(&listVariables ) ) {
- 	     	listVariables();   #TEXT is called internally 
- 	     } else {
- 	     	WARN_MESSAGE("You must load PGinfo.pl into the problem in order to see the PG environment table");
- 	     } 		
- 	}
-
 	my $points = maketext('points');
+
 
 	$points = maketext('point') if $problemValue == 1;
 	##    Prepare header for the problem

@@ -5,10 +5,17 @@
 # initialize PGcore and PGrandom
 
 
-	$main::VERSION ="WW2";
+$main::VERSION ="WW2";
 
 sub _PG_init{
-	$main::VERSION ="WW2.9+";
+  $main::VERSION ="WW2.9+";
+  #
+  #  Set up MathObject context for use in problems
+  #  that don't load MathObjects.pl
+  #
+  %main::context = {};
+  Parser::Context->current(\%main::context);
+
 }
 
 our $PG;  
@@ -382,16 +389,29 @@ sub ENDDOCUMENT {
 		my $str = '';
 		my @resource_names=();
 		foreach my $key (keys %resources) {
-			$str .= knowlLink("$key<br/>", value=>"$key<br/>".pretty_print($resources{$key}), base64=>0);
+			$str .= knowlLink("$key$BR", value=>"$key$BR".pretty_print($resources{$key})."$BR$BR", base64=>0);
 			push @resource_names, $key;
 		}
 		if ($str eq '') {
 			$str = "No auxiliary resources<br/>";
 		} else { 
-			my $summary = "## RESOURCES('".join("','", @resource_names)."')<br/>\n";	 
+			my $summary = "## RESOURCES('".join("','", @resource_names)."')$BR\n";	 
 			$PG->debug_message($summary.$str) ;
 		}
 	}
+	if ( 0 or # allow one to force debug output  manually
+	    ($inputs_ref->{showPGInfo} and ($permissionLevel >=10)) ){
+ 	     my $context = $$Value::context->{flags};
+ 	     $PG->debug_message("PGbasicmacros.pl 2184: ", 
+ 	   			$HR,"Form variables",$BR,
+ 	   			pretty_print($inputs_ref),
+				$HR,"Environment variables", $BR,
+				pretty_print(\%envir),
+                $HR,"Context flags",$BR,
+				pretty_print($context),
+		  ) ;	
+ 	}
+
 
 	#warn keys %{ $PG->{PG_ANSWERS_HASH} };
 	@PG_ANSWER_ENTRY_ORDER = ();
@@ -408,7 +428,7 @@ sub ENDDOCUMENT {
 	            my @response_keys = $answergroup->{response}->response_labels;
 	            if ( 0 or # allow one to force debug output  manually
 	               ($inputs_ref->{showAnsGroupInfo})//0 and ($rh_envir->{permissionLevel})>= 5) {
-	            	$PG->debug_message("PG.pl 388: ", pretty_print($answergroup) ) ;
+	            	$PG->debug_message("PG.pl 418: ", pretty_print($answergroup) ) ;
 	            	$PG->debug_message("PG.pl 389: ", pretty_print($answergroup->{response}));
 	            }
 	            my $response_key = $response_keys[0];
@@ -551,12 +571,20 @@ sub k () {
 }
 
 # ^function pi
+# ^uses $_parser_loaded
 # ^uses &Value::Package
-sub pi () {Value->Package("Formula")->new('pi')->eval}
+sub pi () {
+  if (!eval(q!$main::_parser_loaded!)) {return 4*atan2(1,1)}
+  Value->Package("Formula")->new('pi')->eval;
+}
 
 # ^function Infinity
+# ^uses $_parser_loaded
 # ^uses &Value::Package
-sub Infinity () {Value->Package("Infinity")->new()}
+sub Infinity () {
+  if (!eval(q!$main::_parser_loaded!)) {return 'Infinity'}
+  Value->Package("Infinity")->new();
+}
 
 
 # ^function abs
