@@ -160,7 +160,7 @@ sub Button {
   $penalty[$buttonCount] = 1 if $penalty[$buttonCount] > 1;
   return if $isTeX || $main::panicked >= $level;
   my $time = time();
-  my $name = ($main::openDate <= $time && $time <= $main::dueDate ? "submitAnswers" : "checkAnswers");
+  my $name = ($main::openDate <= $time && $time <= $main::closeDate ? "submitAnswers" : "checkAnswers");
   $value = quoteHTML($value);
   return qq!<input type="submit" name="$name" value="$label" onclick="document.getElementById('_panicked').value++">!;
 }

@@ -209,7 +209,7 @@ sub getStatus {
   $self->{status} = $self->decode;
   $self->{submit} = $main::inputs_ref->{submitAnswers};
   $self->{isReset} = $main::inputs_ref->{_reseed} || ($self->{submit} && $self->{submit} eq $label);
-  $self->{isReset} = 0 unless !$self->{onlyAfterCloseDate} || time >= $main::dueDate;
+  $self->{isReset} = 0 unless !$self->{onlyAfterCloseDate} || time >= $main::closeDate;
 }
 
 #
@@ -373,7 +373,7 @@ sub grader {
   my $score = ($isSubmit || $self->{isReset} ? $result->{score} : $state->{recorded_score});
   my $isWhen = ($self->{when} eq 'always' ||
      ($self->{when} eq 'correct' && $score >= 1 && !$main::inputs_ref->{previewAnswers}));
-  my $okDate = (!$self->{onlyAfterCloseDate} || time >= $main::dueDate);
+  my $okDate = (!$self->{onlyAfterCloseDate} || time >= $main::closeDate);
 
   #
   #  Add the problemRandomize message and data
