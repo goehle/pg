@@ -305,7 +305,7 @@ sub custom_problem_grader_fluid {
     
 # Determine if we are in the reduced scoring period and if the reduced scoring period is enabled and act accordingly
 #warn("enable_reduced_scoring is $enable_reduced_scoring");
-#warn("dueDate is $dueDate");
+#warn("closing Date ($dueDate) is $dueDate");
 
 	if (!$enable_reduced_scoring or time() < $reducedScoringDate) {	# the reduced scoring period is disabled or it is before the reduced scoring period
 		# increase recorded score if the current score is greater.

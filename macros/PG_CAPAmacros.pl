@@ -174,6 +174,10 @@ sub due_date {
  	$main::formattedDueDate;
  }
 
+sub close_date {
+ 	$main::formattedDueDate;
+ }
+ 
 sub answer_date {
    $main::formattedAnswerDate;
 }
