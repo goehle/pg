@@ -677,9 +677,9 @@ sub insertHeader {
 ########################################################
 
 use constant DEFAULT_HEADER_TEXT =><<'END_HEADER_SCRIPT';
-  	<script src="/webwork2_files/js/legacy/Base64.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/Base64/Base64.js" language="javascript">
     </script> 	
-  	<script src="/webwork2_files/js/legacy/ww_applet_support.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/AppletSupport/ww_applet_support.js" language="javascript">
   	    //upload functions stored in /opt/webwork/webwork2/htdocs/js ...
   	    
      </script>
@@ -693,7 +693,9 @@ use constant DEFAULT_HEADER_TEXT =><<'END_HEADER_SCRIPT';
 	 	  if (obj ) {   //RECENT FIX to ==
 	 		  return( obj );
 	 	  } else {
-	 		  alert ("can't find applet " + appletName);		  
+		      // Commented out because if the applet is in a hint
+		      // this might be run with no applet
+		      // alert ("can't find applet " + appletName);		  
 	 	  }
 	  }	
 		
@@ -745,7 +747,7 @@ sub insertObject {
     my $javaParameters = '';
     my $flashParameters = '';
     my $webgeogebraParameters = '';
-    if (PGcore::not_null($self->{parameter_string}) ) {
+    if (PGUtil::not_null($self->{parameter_string}) ) {
     	$javaParameters = $self->{parameter_string};
     	$flashParameters = $self->{parameter_string};
     	$webgeogebraParameters = $self->{parameter_string};
@@ -997,9 +999,9 @@ END_OBJECT_TEXT
 
 
 use constant CANVAS_OBJECT_HEADER_TEXT =><<'END_HEADER_SCRIPT';
-  	<script src="/webwork2_files/js/legacy/Base64.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/Base64/Base64.js" language="javascript">
     </script> 	
-  	<script src="/webwork2_files/js/legacy/ww_applet_support.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/AppletSupport/ww_applet_support.js" language="javascript">
   	    //upload functions stored in /opt/webwork/webwork2/htdocs/js ...
   	    
      </script>
@@ -1095,9 +1097,9 @@ END_OBJECT_TEXT
 
 
 use constant GEOGEBRAWEB_OBJECT_HEADER_TEXT =><<'END_HEADER_SCRIPT';
-  	<script src="/webwork2_files/js/legacy/Base64.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/Base64/Base64.js" language="javascript">
     </script> 	
-  	<script src="/webwork2_files/js/legacy/ww_applet_support.js" language="javascript">
+  	<script src="/webwork2_files/js/apps/AppletSupport/ww_applet_support.js" language="javascript">
   	    //upload functions stored in /opt/webwork/webwork2/htdocs/js ...
   	    
      </script>
@@ -1146,7 +1148,7 @@ END_HEADER_SCRIPT
 use constant GEOGEBRAWEB_OBJECT_TEXT =><<'END_OBJECT_TEXT';
     <script language="javascript">ww_applet_list["$appletName"].visible = 1; // don't submit things if not visible
     </script>
-<script type="text/javascript" language="javascript" src="https://www.geogebra.org/web/4.4/web/web.nocache.js"></script>
+<script type="text/javascript" language="javascript" src="//web.geogebra.org/4.4/web/web.nocache.js"></script>
 
 $webgeogebraParameters
 
