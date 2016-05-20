@@ -49,6 +49,16 @@ sub correct_code {
   }
 }
 
+sub run_pylint {
+  my $self = shift;
+
+  if (@_) {
+    $self->{run_pylint} = shift;
+  } else {
+    return $self->{run_pylint};
+  }
+}
+ 
 sub cmp {
   my $self = shift;
   my $ans = new AnswerEvaluator();
@@ -62,6 +72,8 @@ sub cmp {
     sub {
         my $ans_hash = shift;
 	my $pgpath = shift;
+	my $run_pylint = shift;
+	
 	$ans_hash->{_filter_name} = "check driver output";
 
 	# we make sure that the student code is non empty so that
@@ -84,11 +96,12 @@ sub cmp {
 	$ans_hash->{ans_message} = $string;
 	$ans_hash->{student_ans} = $ans_hash->{original_student_ans};
 
-	$ans_hash->{comment} = $self->pylint($student_code);
+	$ans_hash->{comment} = $self->pylint($student_code) if $run_pylint;
 	
 	return $ans_hash;
       },
-      $self->{pgpath});
+			  $self->{pgpath},
+			  $self->{run_pylint});
   
   # set up post filters to correctly format results in html
 

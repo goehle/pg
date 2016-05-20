@@ -392,7 +392,7 @@ sub _WCUCSmacros_init {
 
     if (!$main::WCUCSHeaderSet) {
 	main::HEADER_TEXT(<<'END_HEADER_TEXT');
-	<script src="/webwork2_files/js/vendor/codeprettify/run_prettify.js" language="javascript"></script>
+	<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" language="javascript"></script>
         <script src="/webwork2_files/js/vendor/codemirror/codemirror.js" language="javascript"></script>
         <script src="/webwork2_files/js/vendor/codemirror/python.js" language="javascript"></script>
         <script src="/webwork2_files/js/vendor/codemirror/trailingspace.js" language="javascript"></script>
@@ -404,6 +404,14 @@ sub _WCUCSmacros_init {
            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==);
            background-position: bottom left;
            background-repeat: repeat-x;
+           }
+           .unselectable {
+              -webkit-touch-callout: none;
+              -webkit-user-select: none;
+              -khtml-user-select: none;
+              -moz-user-select: none;
+              -ms-user-select: none;
+              user-select: none;
            }
         </style>
         <script type="text/javascript">
@@ -428,15 +436,15 @@ END_HEADER_TEXT
 }; # don't reload this file
 
 sub PythonOutput {
-  return new Python::PythonOutput($envir{pgDirectories}->{lib}, @_);
+  return new Python::PythonOutput($wcucs, @_);
 }
 
 sub PythonCode {
-  return new Python::PythonCode($envir{pgDirectories}->{lib}, @_);
+  return new Python::PythonCode($wcucs, @_);
 }
 
 sub PythonDriver {
-  return new Python::PythonDriver($envir{pgDirectories}->{lib}, @_);
+  return new Python::PythonDriver($wcucs, @_);
 }
 
 sub random_word {

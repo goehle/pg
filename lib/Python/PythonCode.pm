@@ -67,12 +67,15 @@ sub cmp {
     sub {
         my $ans_hash = shift;
 	my $pgpath = shift;
+	my $run_pylint = shift;
+	
 	$ans_hash->{_filter_name} = "compare code output";
 
 	# we make sure that the student code is non empty so that
 	# the evaluator doesn't try to run the first "argument"
 	my $studentCode =
-	  Python::PythonCode->new($pgpath,
+	  Python::PythonCode->new({pg_lib => $pgpath,
+				   run_pylint => $run_pylint},
 				  $ans_hash->{original_student_ans} ||
 				 "1");
 	if (defined($self->tests)) {
@@ -81,7 +84,9 @@ sub cmp {
 	  $ans_hash->{correct_ans_latex_string} = '';
 	  $ans_hash->{preview_latex_string} = '';
 	  $ans_hash->{ans_message} = '';
-	  my $correctCode = Python::PythonCode->new($pgpath, $self->code);
+	  my $correctCode = Python::PythonCode->new({pg_lib=>$pgpath,
+						     run_pylint=>0},
+						    $self->code);
 
 	  foreach my $options (@{$self->tests()}) {
 	    $n++;
@@ -149,11 +154,13 @@ sub cmp {
 	}
 
 	$ans_hash->{student_ans} = $ans_hash->{original_student_ans};
-	$ans_hash->{comment} = $studentCode->pylint();
+	
+	$ans_hash->{comment} = $studentCode->pylint() if $run_pylint;
 
 	return $ans_hash;
       },
-      $self->{pgpath});
+      $self->{pgpath},
+      $self->{run_pylint});
   
   # set up post filters to correctly format results in html
 

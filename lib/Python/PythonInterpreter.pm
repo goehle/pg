@@ -79,12 +79,13 @@ package Python::PythonInterpreter;
 
 sub new {
   my $class = shift;
-  my $pgpath = shift;
+  my $conf_variables = shift;
   my $code = shift // '';
   my %options = @_;
 
   my $self = {code => $code,
-	      pgpath => $pgpath,
+	      pgpath => $conf_variables->{pg_lib},
+	      run_pylint => $conf_variables->{run_pylint},
 	      status => undef,
 	      stdout => undef,
 	      stderr => undef,
@@ -93,10 +94,11 @@ sub new {
   bless $self, $class;
 
   $self->options(%options);
+  
   # initialize codejail python
   my $preamble = <<EOS;
 import sys
-sys.path.append('$pgpath/Python')
+sys.path.append('$conf_variables->{pg_lib}/Python')
 import codejail.jail_code
 codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
 EOS
