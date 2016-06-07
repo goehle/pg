@@ -88,7 +88,7 @@ sub new {
   $discussion->{isActing} = ($main::inputs_ref->{user} ne $main::inputs_ref->{effectiveUser});
   $discussion->{isProfessor} = $discussion->{isActing} || $discussion->isProfessor;
   $discussion->{isSuperProf} = (defined($main::SuperProf) && $main::SuperProf eq $main::inputs_ref->{user});
-  $discussion->{pastDue} = (time() > $main::dueDate) && !$self->{isProfessor};
+  $discussion->{pastDue} = (time() > $main::closeDate) && !$self->{isProfessor};
   
   return $discussion;
 }

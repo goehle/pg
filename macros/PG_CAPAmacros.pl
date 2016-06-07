@@ -171,9 +171,13 @@ sub question {
 }
 
 sub due_date {
- 	$main::formattedDueDate;
+ 	$main::formattedcloseDate;
  }
 
+sub close_date {
+ 	$main::formattedcloseDate;
+ }
+ 
 sub answer_date {
    $main::formattedAnswerDate;
 }

@@ -63,7 +63,7 @@ Default: "Correct"
 =item C<S<< onlyAfterDue => 0 or 1 >>>
 
 Specifies if the reseed option is only
-allowed after the due date has passed.
+allowed after the close date has passed.
 Default:  1
 
 =item C<S<< style => type >>>
@@ -107,19 +107,19 @@ so that it will not overwrite the one installed by the library (it is stored so
 that it can be called internally by the problemRandomize library's grader).
 
 Note that the problem will store the new problem seed only if the student can
-submit saved answers (i.e., only before the due date).  After the due date,
+submit saved answers (i.e., only before the closing date).  After the closing date,
 the student can get new versions, but the problem will revert to the original
 version when they come back to the problem later.  Since the default is only
-to allow reseeding afer the due date, the reseeding will not be sticky by default.
+to allow reseeding afer the closing date, the reseeding will not be sticky by default.
 Hardcopy ALWAYS produces the original version of the problem, regardless of
 the seed saved by the student.
 
 Examples:
 
 	ProblemRandomize();                               # use all defaults
-	ProblemRandomize(when=>"Always");                 # always can reseed (after due date)
-	ProblemRandomize(onlyAfterDue=>0);                # can reseed whenever correct
-	ProblemRandomize(when=>"always",onlyAfterDue=>0); # always can reseed
+	ProblemRandomize(when=>"Always");                 # always can reseed (after closing date)
+	ProblemRandomize(onlyAfterCloseDate=>0);                # can reseed whenever correct
+	ProblemRandomize(when=>"always",onlyAfterCloseDate=>0); # always can reseed
 	ProblemRandomize(style=>"Input");                 # use an input box to set the seed
 
 For problems that include "PGcourse.pl" in their loadMacros() calls, you can
@@ -132,7 +132,7 @@ in PGcourse.pl.  You can make the ProblemRandomize() be dependent on the set
 number or the set or the login ID or whatever.  For example
 
 	loadMacros("problemRandomize.pl");
-	ProblemRandomize(when=>"always",onlyAfterDue=>0,style=>"Input")
+	ProblemRandomize(when=>"always",onlyAfterCloseDate=>0,style=>"Input")
 		if $studentLogin eq "dpvc";
 
 would enable reseeding at any time for the user called "dpvc" (presumably a
@@ -178,7 +178,7 @@ sub new {
   my $self = shift; my $class = ref($self) || $self;
   my $pr = bless {
     when => "correct",
-    onlyAfterDue => 1,
+    onlyAfterCloseDate => 1,
     style => "Button",
     styleName => ($main::inputs_ref->{effectiveUser} ne $main::inputs_ref->{user} ? "checkAnswers" : "submitAnswers"),
     label => undef,
@@ -209,7 +209,7 @@ sub getStatus {
   $self->{status} = $self->decode;
   $self->{submit} = $main::inputs_ref->{submitAnswers};
   $self->{isReset} = $main::inputs_ref->{_reseed} || ($self->{submit} && $self->{submit} eq $label);
-  $self->{isReset} = 0 unless !$self->{onlyAfterDue} || time >= $main::dueDate;
+  $self->{isReset} = 0 unless !$self->{onlyAfterCloseDate} || time >= $main::closeDate;
 }
 
 #
@@ -373,14 +373,14 @@ sub grader {
   my $score = ($isSubmit || $self->{isReset} ? $result->{score} : $state->{recorded_score});
   my $isWhen = ($self->{when} eq 'always' ||
      ($self->{when} eq 'correct' && $score >= 1 && !$main::inputs_ref->{previewAnswers}));
-  my $okDate = (!$self->{onlyAfterDue} || time >= $main::dueDate);
+  my $okDate = (!$self->{onlyAfterCloseDate} || time >= $main::closeDate);
 
   #
   #  Add the problemRandomize message and data
   #
   if ($isWhen && !$okDate) {
     $result->{msg} .= "</i><br /><b>Note:</b> <i>" if $result->{msg};
-    $result->{msg} .= "You can get a new version of this problem after the due date.";
+    $result->{msg} .= "You can get a new version of this problem after the closing date.";
   }
   if (!$result->{msg}) {
     # hack to remove unwanted "<b>Note: </b>" from the problem
