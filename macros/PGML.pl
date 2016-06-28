@@ -43,7 +43,7 @@ my $code = '```';
 my $pre = ':   ';
 my $emphasis = '\*+|_+';
 my $chars = '\\\\.|[{}[\]\'"]';
-my $ansrule = '\[(?:_+|[ox^])\]\*?';
+my $ansrule = '\[(?:_+|[ox^])\]\*?\*?';
 my $open = '\[(?:[!<%@$]|::?|``?|\|+ ?)';
 my $close = '(?:[!>%@$]|::?|``?| ?\|+)\]';
 my $noop = '\[\]';
@@ -317,6 +317,7 @@ sub Answer {
   my $self = shift; my $token = shift;
   my $def = {options => ["answer","width","height","name","array"]};
   $def->{hasStar} = 1 if $token =~ m/\*$/;
+  $def->{hasDblStar} = 1 if $token =~ m/\*\*$/;
   $self->Item("answer",$token,$def);
 }
 
@@ -958,7 +959,7 @@ sub Answer {
   }
   if (defined($ans)) {
     if (ref($ans) =~ /CODE|AnswerEvaluator/) {
-      if ($item->{hasStar}) {
+      if ($item->{hasStar} || $item->{hasDblStar}) {
 	if (defined($item->{name})) {
 	  $rule = main::NAMED_ANS_BOX($item->{name},
 				      $item->{height} // 10,
@@ -969,6 +970,9 @@ sub Answer {
 				  $item->{width});
 	    main::ANS($ans);
 	  }
+	if ($item->{hasDblStar}) {
+	  $rule = '<div class="code">'.$rule.'</div>';
+	}
 	} else { 
 	  if (defined($item->{name})) {
 	    $rule = main::NAMED_ANS_RULE($item->{name},$item->{width});

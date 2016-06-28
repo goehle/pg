@@ -418,7 +418,7 @@ sub _WCUCSmacros_init {
         $(function() {
             $('code.pgml').addClass('prettyprint');
             $('#answerComment table').addClass('table');
-            $('#problem_body textarea').each(function () {
+            $('#problem_body div.code textarea').each(function () {
                  CodeMirror.fromTextArea(this, 
                  {mode: "python",
                   indentUnit: 4, 
@@ -431,6 +431,13 @@ sub _WCUCSmacros_init {
 END_HEADER_TEXT
 
 	$main::WCUCSHeaderSet = 1;
+
+	main::PG_restricted_eval( <<'EOF');
+	$main::NL = NL();
+        $main::I = I();
+        $main::II = II();
+        $main::III = III();
+EOF
     }
 
 }; # don't reload this file
@@ -533,6 +540,12 @@ const 	float 	native 	super 	while  );
     'We are so skilled!',
     );
 
+sub NL { return "\n" };
 
+sub I { return "    " };
+
+sub II { return "        " };
+
+sub III { return "            " };
 
 1;

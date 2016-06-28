@@ -204,7 +204,7 @@ sub evaluate {
 					       '',
 					       $self->{files} // '',
 					       $self->{argv} // '',
-					       $self->{stdin} // '',
+					       "$self->{stdin}" // '',
 					      );
   };
   warn($@) if $@;
