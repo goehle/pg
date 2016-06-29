@@ -2379,7 +2379,8 @@ sub helpLink {
 		'vector' => 'Entering-Vectors.html',
 		'interval' => 'IntervalNotation.html',
 		'unit' => 'Units.html',
-		'syntax' => 'Syntax.html',
+	        'syntax' => 'Syntax.html',
+		'errors' => 'PythonErrors.html',	
 		);
 
 	my $infoRef = '';

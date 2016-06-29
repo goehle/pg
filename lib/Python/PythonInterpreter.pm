@@ -72,10 +72,19 @@ exit status of the process: an int, 0 for success
 
 =cut
 
-use strict;
-use Inline::Python;
-
 package Python::PythonInterpreter;
+
+use strict;
+use Cwd qw(getcwd);
+use IPC::Run qw(run);
+
+use constant MAX_OUTPUT => 10000;
+use constant TIMEOUT => 2;
+use constant SB_USER => 'sandbox';
+use constant SB_PYTHON => '/wwsandbox/bin/python';
+use constant SB_PYLINT => '/wwsandbox/bin/pylint';
+use constant SB_PYLINTRC => '/wwsandbox/pylint.rc';
+use constant JAILED_CODE => 'jailed_code';
 
 sub new {
   my $class = shift;
@@ -94,16 +103,6 @@ sub new {
   bless $self, $class;
 
   $self->options(%options);
-  
-  # initialize codejail python
-  my $preamble = <<EOS;
-import sys
-sys.path.append('$conf_variables->{pg_lib}/Python')
-import codejail.jail_code
-codejail.jail_code.configure('python', '/wwsandbox/bin/python','sandbox')
-EOS
-
-  Inline::Python::py_eval($preamble);
   
   return $self;
 }
@@ -196,22 +195,53 @@ sub evaluate {
   my $code = $self->code;
   my $output;
 
-  eval {
-    $output = Inline::Python::py_call_function('codejail.jail_code',
-					       'jail_code',
-					       'python',
-					       $code,
-					       '',
-					       $self->{files} // '',
-					       $self->{argv} // '',
-					       "$self->{stdin}" // '',
-					      );
-  };
-  warn($@) if $@;
 
-  $self->status(Inline::Python::py_get_attr($output,"status"));
-  $self->stdout(Inline::Python::py_get_attr($output,"stdout"));
-  $self->stderr(Inline::Python::py_get_attr($output,"stderr"));
+  my $olddir = getcwd;
+
+  chdir("/tmp");
+
+  my $tmpdir = mk_tmp_dir();
+    
+  # create python file for jailed code
+  my $fh;
+  open($fh, ">",JAILED_CODE);
+  chmod(0444,$fh);
+  print $fh $code;
+  close($fh);
+
+  # for each temporary file create the file
+  foreach my $ref (@{$self->{files}}) {
+    open($fh, ">",$$ref[0]);
+    chmod(0444,$fh);
+    print $fh $$ref[1];
+    close($fh);
+  }  
+
+  my $cmd = ref($self->{argv}) eq "ARRAY"
+    ? [@{$self->{argv}}] : [];
+
+  unshift @$cmd, ("sudo", "-u", SB_USER, SB_PYTHON,
+		  JAILED_CODE);
+
+  my $stdout;
+  my $stderr;
+  my $stdin = $self->{stdin};
+
+  my $status = run_python($cmd,\$stdin,\$stdout,\$stderr);
+
+  if (length($stdout) > MAX_OUTPUT) {
+    $stdout = substr($stdout,0,MAX_OUTPUT).'.....';
+  }
+
+  if (length($stderr) > MAX_OUTPUT) {
+    $stderr = substr($stderr,0,MAX_OUTPUT).'.....';
+  }
+  
+  $self->status($status);
+  $self->stdout($stdout);
+  $self->stderr($stderr);
+
+  rm_tmp_dir($tmpdir,$olddir);
   
   return $self->status;
 }
@@ -219,29 +249,35 @@ sub evaluate {
 sub pylint {
   my $self = shift;
   my $code = shift // $self->code;
-
   my $output;
-  my $pgpath = $self->{pgpath}."/Python";
 
-  eval {
-    $output = Inline::Python::py_call_function('codejail.jail_code',
-					       'jail_code',
-					       'python',
-					       '',
-					       [$self->{pgpath}."/Python/pylint.rc"],
-					       [['student.py',$code]],
-					       ['/wwsandbox/bin/pylint',
-						'--rcfile=./pylint.rc',
-						'student.py'],
-					       '',
-					      );
-  };
-  warn($@) if $@;
+  my $olddir = getcwd;
+  my $tmpdir = mk_tmp_dir();
+  
+  # create python file for jailed code
+  my $fh;
+  open($fh, ">",JAILED_CODE);
+  chmod(0444, $fh);
+  print $fh $code;
+  close($fh);
 
-  my $messages = Inline::Python::py_get_attr($output,"stdout");
+  my $cmd = ["sudo", "-u", SB_USER, SB_PYLINT,
+		   "--rcfile=".SB_PYLINTRC, JAILED_CODE];
+
+  my $stdout;
+  my $stderr;
+  my $stdin;
+     
+  eval {run $cmd, \$stdin, \$stdout, \$stderr;};
+  run_python($cmd,\$stdin,\$stdout,\$stderr);
+
+  warn($stderr) if $stderr;
+
+  rm_tmp_dir($tmpdir,$olddir);
+  
+  my $messages = $stdout;
   my $comment = '';
 
-#  warn(Inline::Python::py_get_attr($output,"stderr"));
   if ($messages) {
     $messages =~ s/^.*\n//;
     my @elements = split(/@#/s,$messages);
@@ -269,5 +305,52 @@ sub pylint {
   return $comment;
 }
 
+sub run_python {
+  my ($cmd, $r_stdin, $r_stdout, $r_stderr) = @_;
 
+  my $status;
+    
+  eval {
+    local $SIG{ALRM} = sub {
+      system("sudo -u ".SB_USER." pkill -o python");
+      die "Took Too Long";
+    };
+    alarm(TIMEOUT); 
+    run $cmd, $r_stdin, $r_stdout, $r_stderr;
+    $status = $? >> 8;
+  };
+
+  if ($@) {
+    if ($@ =~ /Took Too Long/) {
+      $$r_stderr = "Took Too Long";
+    } else {
+      warn($@);
+    }
+  }
+
+  select STDOUT;
+  
+  return $status;
+}
+
+sub mk_tmp_dir {
+  chdir("/tmp");
+  my $tmpdir = 'codejail-';
+  for (1 .. 6) {
+    $tmpdir .= ('0'..'9','A'..'Z','a'..'z')[rand 60]
+  }
+  mkdir($tmpdir);
+  chmod(0755,$tmpdir);
+  chdir($tmpdir);
+  return $tmpdir
+}
+
+sub rm_tmp_dir {
+  my $tmpdir = shift;
+  my $olddir = shift;
+
+  unlink glob "'/tmp/$tmpdir/*'";
+  rmdir "/tmp/$tmpdir";
+  chdir $olddir;
+}
 1;

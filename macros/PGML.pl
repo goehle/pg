@@ -43,7 +43,7 @@ my $code = '```';
 my $pre = ':   ';
 my $emphasis = '\*+|_+';
 my $chars = '\\\\.|[{}[\]\'"]';
-my $ansrule = '\[(?:_+|[ox^])\]\*?\*?';
+my $ansrule = '\[(?:_+|[ox^])\]\*?';
 my $open = '\[(?:[!<%@$]|::?|``?|\|+ ?)';
 my $close = '(?:[!>%@$]|::?|``?| ?\|+)\]';
 my $noop = '\[\]';
@@ -317,7 +317,6 @@ sub Answer {
   my $self = shift; my $token = shift;
   my $def = {options => ["answer","width","height","name","array"]};
   $def->{hasStar} = 1 if $token =~ m/\*$/;
-  $def->{hasDblStar} = 1 if $token =~ m/\*\*$/;
   $self->Item("answer",$token,$def);
 }
 
@@ -959,7 +958,7 @@ sub Answer {
   }
   if (defined($ans)) {
     if (ref($ans) =~ /CODE|AnswerEvaluator/) {
-      if ($item->{hasStar} || $item->{hasDblStar}) {
+      if ($item->{hasStar}) {
 	if (defined($item->{name})) {
 	  $rule = main::NAMED_ANS_BOX($item->{name},
 				      $item->{height} // 10,
@@ -970,9 +969,6 @@ sub Answer {
 				  $item->{width});
 	    main::ANS($ans);
 	  }
-	if ($item->{hasDblStar}) {
-	  $rule = '<div class="code">'.$rule.'</div>';
-	}
 	} else { 
 	  if (defined($item->{name})) {
 	    $rule = main::NAMED_ANS_RULE($item->{name},$item->{width});
@@ -982,6 +978,31 @@ sub Answer {
 	    main::ANS($ans);
 	  }
 	}
+    } elsif (ref($ans) =~ /Python::/) {
+      if ($item->{hasStar} || ref($ans) =~ /PythonDriver|PythonCode/) {
+	if (defined($item->{name})) {
+	  $rule = main::NAMED_ANS_BOX($item->{name},
+				      $item->{height} // 10,
+				      $item->{width});
+	  main::NAMED_ANS($item->{name} => $ans);
+	} else {
+	  $rule = main::ans_box($item->{height} // 10,
+				$item->{width});
+	  main::ANS($ans->cmp);
+	}
+	if (ref($ans) =~ /PythonDriver|PythonCode/) {
+	  $rule = '<div class="code">'.$rule.'</div>';
+	}
+      } else { 
+	if (defined($item->{name})) {
+	  $rule = main::NAMED_ANS_RULE($item->{name},$item->{width});
+	  main::NAMED_ANS($item->{name} => $ans);
+	} else {
+	  $rule = main::ans_rule($item->{width});
+	  main::ANS($ans->cmp);
+	}
+      }
+      
     } else {
       unless (Value::isValue($ans)) {
         $ans = Parser::Formula($item->{answer});

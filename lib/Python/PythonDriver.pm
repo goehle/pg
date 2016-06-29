@@ -80,13 +80,35 @@ sub cmp {
 	# the evaluator doesn't try to run the first "argument"
 	my $student_code = $ans_hash->{original_student_ans} || "1";
 
+	# try to parse the student code and check for errors
+	my $student_evaluator = Python::PythonCode->new({pg_lib => $pgpath,
+							 run_pylint => 0},
+							$student_code);
+	$student_evaluator->evaluate();
+	
+	# if there is an error parsing the code the status will be nonzero
+	if ($student_evaluator->status) {
+	  $ans_hash->{score} = 0;
+	  $ans_hash->{correct_ans_latex_string} = $student_evaluator->stdout();
+	  $ans_hash->{preview_latex_string} = $student_evaluator->stdout();
+	  my $string = $student_evaluator->stderr();
+	  $string =~ s/^.*File "jailed_code"[\S ]*\n//s;
+	  $string =~ s/File "\/tmp\/\S+\/student.py"/Answer Code/g;
+	  $ans_hash->{ans_message} = $string;
+	  $ans_hash->{student_ans} = $ans_hash->{original_student_ans};
+
+	  return $ans_hash;
+	}
+	
 	# add the student code as a file that the driver can import
 	my $files = $self->files() // [];
 	push @{$files}, ['student.py',$student_code];
 	$self->files($files);
 	
 	$self->evaluate();
-	
+
+	# the score is the status of the code, which isn't great
+	# because 0 is bad and 1 is good
 	$ans_hash->{score} = $self->status;
 	$ans_hash->{correct_ans_latex_string} = $self->stdout();
 	$ans_hash->{preview_latex_string} = $self->stdout();

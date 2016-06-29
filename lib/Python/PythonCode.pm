@@ -90,12 +90,12 @@ sub cmp {
 
 	  foreach my $options (@{$self->tests()}) {
 	    $n++;
-	    $studentCode->options(argv => $options->{argv} // '',
-				  files => $options->{files} // '',
-				  stdin => $options->{stdin} // '');
-	    $correctCode->options(argv => $options->{argv} // '',
-				  files => $options->{files} // '',
-				  stdin => $options->{stdin} // '');
+	    $studentCode->options(argv => $options->{argv},
+				  files => $options->{files},
+				  stdin => $options->{stdin});
+	    $correctCode->options(argv => $options->{argv},
+				  files => $options->{files},
+				  stdin => $options->{stdin});
 
 	    $studentCode->evaluate();
 	    $correctCode->evaluate();
@@ -116,8 +116,8 @@ sub cmp {
 	      if $options->{argv};
 	    $inputs .= 'Input: '.$options->{stdin}."\n"
 	      if $options->{stdin};
-	    $inputs .= 'Files: '.join(";\n",
-				      map {'Name - '.$_->[0].
+	    $inputs .= "Files:\n".join(";\n",
+				      map {' Name - '.$_->[0].
 					     ', Content - '.$_->[1]}
 				      @{$options->{files}})."\n"
 	      if $options->{files};
