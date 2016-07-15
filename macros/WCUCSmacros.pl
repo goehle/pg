@@ -1,6 +1,6 @@
 ################################################################################
 # WeBWorK Online Homework Delivery System
-# Copyright © 2000-2007 The WeBWorK Project, http://openwebwork.sf.net/
+# Copyright Â© 2000-2007 The WeBWorK Project, http://openwebwork.sf.net/
 # $CVSHeader$
 # 
 # This program is free software; you can redistribute it and/or modify it under
@@ -186,7 +186,7 @@ including the number of spaces.
  Code:   
  ```[@ $code->code() @]``` 
  Answer:   
- [____]{$code->cmp}{80}
+ [____]{$code}{80}
  END_PGML
  BEGIN_PGML_SOLUTION
  Output:   
@@ -232,7 +232,7 @@ of the output.  Notice that the argv list is a reference to an array of strings.
  Arguments:   
  :   [@ join(', ',@$argv) @]
  Answer:   
- [____]*{$code->cmp}{80}
+ [____]*{$code}{80}
  END_PGML
  BEGIN_PGML_SOLUTION
  Output:   
@@ -267,7 +267,7 @@ World.  The Python code opens the file and reads and prints the content.
   Filetext:  
  :   [$filetext]
  Answer:   
- [____]{$code->cmp}{80}
+ [____]{$code}{80}
  END_PGML
  BEGIN_PGML_SOLUTION
  Output:   
@@ -297,7 +297,7 @@ output.
  Output:  
  :   [@ $code->stdout() @] 
  Answer:   
- [_______]*{$code->cmp}
+ [_______]*{$code}
  END_PGML
  BEGIN_PGML_SOLUTION
  Code:
@@ -332,7 +332,7 @@ checking student code
  Write code which checks the first argument.  If it is equal to 1 then it prints  the contents of stdin
  and if it is equal to zero then it prints "hello".
  Answer:  
- [_______]*{$code->cmp}
+ [_______]*{$code}
  END_PGML
  BEGIN_PGML_SOLUTION
  Code:
@@ -376,7 +376,7 @@ function exists and that it can add two numbers.
  and returns their sum.  
  
  Code:  
- [_______]*{$code->cmp}
+ [_______]*{$code}
  END_PGML
  
  BEGIN_PGML_SOLUTION
@@ -422,6 +422,8 @@ sub _WCUCSmacros_init {
                  CodeMirror.fromTextArea(this, 
                  {mode: "python",
                   indentUnit: 4, 
+                  extraKeys:
+                     {Tab: function(cm) {cm.execCommand('insertSoftTab')}},
                   lineNumbers: true, 
                   showTrailingSpace: true, 
                   rulers: [{column: 100, color:'red', lineStyle:"dashed"}],              });
@@ -455,16 +457,30 @@ sub PythonDriver {
 }
 
 sub random_word {
-    return $word_list[random(0,$#word_list)];
+  return random_element(\@word_list);
 }
 
 sub random_sentence {
-    return $sentence_list[random(0,$#sentence_list)];
+  return random_element(\@sentence_list);
+}
+
+sub random_extension {
+  return random_element(\@file_extensions);
 }
 
 sub random_phrase {
-    return $phrase_list[random(0,$#phrase_list)];
+  return random_element(\@phrase_list);
 }
+
+sub random_element {
+  my $arrayref = shift;
+  $i = random(0,length(@$arrayref));
+  my $elem = ${$arrayref}[$i];
+  splice @$arrayref, $i, 1;
+  return $elem;
+}
+
+@file_extensions=qw(txt png jpeg gif edu gov com tex org py pl c cc java doc);
 
 @word_list= qw(abandoned apple bevelled butter ceres 
 chicken despise depot eighth eject 
@@ -531,7 +547,7 @@ const 	float 	native 	super 	while  );
     'Ha ha! I do not get it.',
     'It is much funnier now that I get it.', 
     'Come to the dark side. We have cookies.', 
-    'The decision is maybe and that’s final!', 
+    'The decision is maybe and that is final!', 
     'I am pretending to be a tomato.', 
     'Never put a cat on your head.', 
     'Do not eat my foot!', 
@@ -547,5 +563,10 @@ sub I { return "    " };
 sub II { return "        " };
 
 sub III { return "            " };
+
+sub IPC::Run::run {
+  # this dummy function masks a dangerous IPC one
+  return;
+}
 
 1;

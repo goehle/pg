@@ -80,6 +80,7 @@ use IPC::Run qw(run);
 
 use constant MAX_OUTPUT => 10000;
 use constant TIMEOUT => 2;
+use constant NICE_LEVEL => '-2';
 use constant SB_USER => 'sandbox';
 use constant SB_PYTHON => '/wwsandbox/bin/python';
 use constant SB_PYLINT => '/wwsandbox/bin/pylint';
@@ -196,20 +197,19 @@ sub evaluate {
   my $output;
 
 
+  # make temporary directory
   my $olddir = getcwd;
-
   chdir("/tmp");
-
   my $tmpdir = mk_tmp_dir();
     
-  # create python file for jailed code
+  # create python file containing jailed code
   my $fh;
   open($fh, ">",JAILED_CODE);
   chmod(0444,$fh);
   print $fh $code;
   close($fh);
 
-  # for each temporary file create the file
+  # for each temporary file create the file and add content
   foreach my $ref (@{$self->{files}}) {
     open($fh, ">",$$ref[0]);
     chmod(0444,$fh);
@@ -217,18 +217,22 @@ sub evaluate {
     close($fh);
   }  
 
+  # build the command, adding any extra arguments
   my $cmd = ref($self->{argv}) eq "ARRAY"
     ? [@{$self->{argv}}] : [];
 
-  unshift @$cmd, ("sudo", "-u", SB_USER, SB_PYTHON,
-		  JAILED_CODE);
+  unshift @$cmd, ("sudo", "-u", SB_USER,  "nice", NICE_LEVEL,
+		  SB_PYTHON, JAILED_CODE);
 
   my $stdout;
   my $stderr;
   my $stdin = $self->{stdin};
 
+  # run the command, passing in references to stdin,
+  # stdout and stderr
   my $status = run_python($cmd,\$stdin,\$stdout,\$stderr);
 
+  # truncate stdout/stderr so they aren't too long
   if (length($stdout) > MAX_OUTPUT) {
     $stdout = substr($stdout,0,MAX_OUTPUT).'.....';
   }
@@ -236,7 +240,8 @@ sub evaluate {
   if (length($stderr) > MAX_OUTPUT) {
     $stderr = substr($stderr,0,MAX_OUTPUT).'.....';
   }
-  
+
+  # set status and other variables.  Clean up temp directories
   $self->status($status);
   $self->stdout($stdout);
   $self->stderr($stderr);
@@ -251,6 +256,7 @@ sub pylint {
   my $code = shift // $self->code;
   my $output;
 
+  # make a temporary directory
   my $olddir = getcwd;
   my $tmpdir = mk_tmp_dir();
   
@@ -261,14 +267,16 @@ sub pylint {
   print $fh $code;
   close($fh);
 
-  my $cmd = ["sudo", "-u", SB_USER, SB_PYLINT,
+  # create pylint command
+  my $cmd = ["sudo", "-u", SB_USER, "nice", NICE_LEVEL, SB_PYLINT,
 		   "--rcfile=".SB_PYLINTRC, JAILED_CODE];
 
+  # run pylint command, passing in references for stdin
+  # stdout stderr
   my $stdout;
   my $stderr;
   my $stdin;
      
-  eval {run $cmd, \$stdin, \$stdout, \$stderr;};
   run_python($cmd,\$stdin,\$stdout,\$stderr);
 
   warn($stderr) if $stderr;
