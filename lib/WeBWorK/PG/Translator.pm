@@ -301,7 +301,8 @@ sub initialize {
 	#$safe_cmpt -> share('$rf_restricted_eval');
 	use strict;
     	
-	$safe_cmpt -> share_from('main', $self->{ra_included_modules} );
+    $safe_cmpt -> share_from('main', $self->{ra_included_modules} );
+
 		# the above line will get changed when we fix the PG modules thing. heh heh.
 }
 

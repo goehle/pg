@@ -279,7 +279,7 @@ sub pylint {
      
   run_python($cmd,\$stdin,\$stdout,\$stderr);
 
-  warn($stderr) if $stderr;
+  warn($stderr) if $stderr && $stderr !~ /Took Too Long/;
 
   rm_tmp_dir($tmpdir,$olddir);
   
@@ -317,14 +317,16 @@ sub run_python {
   my ($cmd, $r_stdin, $r_stdout, $r_stderr) = @_;
 
   my $status;
-    
+
   eval {
     local $SIG{ALRM} = sub {
       system("sudo -u ".SB_USER." pkill -o python");
       die "Took Too Long";
     };
+
     alarm(TIMEOUT); 
     run $cmd, $r_stdin, $r_stdout, $r_stderr;
+        
     $status = $? >> 8;
   };
 

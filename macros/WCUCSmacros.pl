@@ -422,6 +422,7 @@ sub _WCUCSmacros_init {
                  CodeMirror.fromTextArea(this, 
                  {mode: "python",
                   indentUnit: 4, 
+                  tabMode: "spaces", 
                   extraKeys:
                      {Tab: function(cm) {cm.execCommand('insertSoftTab')}},
                   lineNumbers: true, 
@@ -493,13 +494,15 @@ remand steel scene turnip trunk
 ulcer unnerve vent vanish water
 world xavier young yawn zoom );
 
-@python_keywords = qw( and       del       from      not       while
-as        elif      global    or        with
-assert    else      if        pass      yield
-break     except    import    print
-class     exec      in        raise
-continue  finally   is        return 
-def       for       lambda    try );
+@python_keywords = qw( 
+False      class      finally    is         return
+None       continue   for        lambda     try
+True       def        from       nonlocal   while
+and        del        global     not        with
+as         elif       if         or         yield
+assert     else       import     pass
+break      except     in         raise 
+);
 
 @java_keywords = qw( abstract 	continue 	for 	new 	switch
 assert 	default 	goto 	package 	synchronized
