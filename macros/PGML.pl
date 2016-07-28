@@ -481,7 +481,7 @@ my $balanceAll = qr/[\{\[\'\"]/;
 	       balance=>$balanceAll, cancelUnbalanced=>1},
   "'"    => {type=>'balance', terminator=>qr/\'/, terminateMethod=>'terminateBalance'},
   '"'    => {type=>'balance', terminator=>qr/\"/, terminateMethod=>'terminateBalance'},
-  "```"  => {type=>'code', terminator=>qr/```/, terminateMethod=>'terminateCode', parseAll=>1, class=>'pgml', allowStar=>1},
+  "```"  => {type=>'code', terminator=>qr/```/, terminateMethod=>'terminateCode', parseAll=>1, class=>'pgml'},
   ":   " => {type=>'pre', parseAll=>1, terminator=>qr/\n+/, terminateMethod=>'terminatePre',
                combine=>{pre=>"type"}, noIndent=>-1},
   ">>"   => {type=>'align', parseAll=>1, align=>"right", breakInside=>1,
@@ -1136,9 +1136,6 @@ sub Bullet {
 sub Code {
   my $self = shift; my $item = shift;
   my $class = $item->{class} // '';
-  if ($item->{hasStar}) {
-    $class .= " unselectable";
-  }
   $class = " class='$class'" if $class; 
   return $self->nl .
     '<pre style="margin:0"><code'.$class.'>' .

@@ -1,6 +1,6 @@
 ################################################################################
 # WeBWorK Online Homework Delivery System
-# Copyright Â© 2000-2007 The WeBWorK Project, http://openwebwork.sf.net/
+# Copyright  2000-2007 The WeBWorK Project, http://openwebwork.sf.net/
 # $CVSHeader$
 # 
 # This program is free software; you can redistribute it and/or modify it under
@@ -416,7 +416,7 @@ sub _WCUCSmacros_init {
         </style>
         <script type="text/javascript">
         $(function() {
-            $('code.pgml').addClass('prettyprint');
+            $('code.pgml').addClass('prettyprint unselectable');
             $('#answerComment table').addClass('table');
             $('#problem_body div.code textarea').each(function () {
                  CodeMirror.fromTextArea(this, 
@@ -473,9 +473,13 @@ sub random_phrase {
   return random_element(\@phrase_list);
 }
 
+sub random_op {
+  return random_element(\@operators);
+}
+
 sub random_element {
   my $arrayref = shift;
-  $i = random(0,length(@$arrayref));
+  $i = random(0,$#{$arrayref});
   my $elem = ${$arrayref}[$i];
   splice @$arrayref, $i, 1;
   return $elem;
@@ -493,6 +497,8 @@ pause premonition queen quality roast
 remand steel scene turnip trunk 
 ulcer unnerve vent vanish water
 world xavier young yawn zoom );
+
+@operators = ('+', '-', '*', '/', '//', '**', '%');
 
 @python_keywords = qw( 
 False      class      finally    is         return
